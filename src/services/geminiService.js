@@ -11,11 +11,32 @@ const CATEGORIES = [
 
 const PRIORITIES = ["Low", "Medium", "High", "Critical"];
 
+const RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    category: {
+      type: "string",
+      enum: CATEGORIES
+    },
+    priority: {
+      type: "string",
+      enum: PRIORITIES
+    },
+    recommendedDepartment: {
+      type: "string"
+    },
+    aiReasoning: {
+      type: "string"
+    }
+  },
+  required: ["category", "priority", "recommendedDepartment", "aiReasoning"]
+};
+
 /**
  * Keyword-based fallback classifier when API key is missing or call fails.
  * Guarantees zero crashes and graceful degradation.
  */
-export function mockClassifyIssue(title, description) {
+export function mockClassifyIssue(title, description, reason = "Local Heuristic") {
   const text = `${title} ${description}`.toLowerCase();
   
   let category = "Other";
@@ -66,8 +87,10 @@ export function mockClassifyIssue(title, description) {
     category,
     priority,
     recommendedDepartment,
-    aiReasoning: `${aiReasoning} (Triaged using fallback heuristic engine).`,
-    isMock: true
+    aiReasoning: `${aiReasoning} (${reason})`,
+    isMock: true,
+    mockReason: reason,
+    aiMode: `Mock AI mode (${reason})`
   };
 }
 
@@ -76,7 +99,6 @@ export function mockClassifyIssue(title, description) {
  */
 function cleanJsonOutput(text) {
   let cleaned = text.trim();
-  // Strip markdown code fences if present (```json ... ``` or ``` ...)
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   }
@@ -84,9 +106,9 @@ function cleanJsonOutput(text) {
 }
 
 /**
- * Direct REST fallback to Gemini in case SDK has browser environment constraints
+ * Direct REST fallback to Gemini with AbortController timeout & minimal thinking
  */
-async function callGeminiRest({ apiKey, model, systemPrompt, userPrompt, imageBase64 }) {
+async function callGeminiRest({ apiKey, model, systemPrompt, userPrompt, imageBase64, signal }) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
   const parts = [];
@@ -110,16 +132,23 @@ async function callGeminiRest({ apiKey, model, systemPrompt, userPrompt, imageBa
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal,
     body: JSON.stringify({
       contents: [{ parts }],
       generationConfig: {
-        response_mime_type: "application/json"
+        response_mime_type: "application/json",
+        response_schema: RESPONSE_SCHEMA,
+        max_output_tokens: 400,
+        thinking_config: {
+          thinking_budget: 0
+        }
       }
     })
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    const errorBody = await response.text();
+    throw new Error(`HTTP ${response.status}: ${errorBody}`);
   }
 
   const data = await response.json();
@@ -129,8 +158,12 @@ async function callGeminiRest({ apiKey, model, systemPrompt, userPrompt, imageBa
 }
 
 /**
- * Classify issue with Google Gemini API via @google/genai package,
- * with graceful REST backup and zero-crash mock fallback.
+ * Classify issue with Google Gemini API:
+ * - 15-second AbortController timeout
+ * - Minimal/zero thinking budget (thinkingBudget: 0)
+ * - Strict JSON responseSchema & maxOutputTokens: 400
+ * - Logs exact errors to browser console
+ * - Graceful fallback to Mock AI mode with short reason badge
  */
 export async function triageIssueWithGemini({ title, description, location, selectedCategory, imageBase64, apiKey, modelName }) {
   const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
@@ -139,16 +172,16 @@ export async function triageIssueWithGemini({ title, description, location, sele
   const key = apiKey || envKey;
   const model = modelName || envModel || "gemini-3.8-flash";
 
-  // If no API key is provided, use fallback mock
+  // If no API key is provided, use fallback mock immediately
   if (!key || key.trim() === "") {
     console.warn("CivicResolve: No Gemini API Key set. Running in Mock AI mode.");
-    return mockClassifyIssue(title, description);
+    return mockClassifyIssue(title, description, "No API Key");
   }
 
-  const systemPrompt = `You are CivicResolve AI, an expert civic triage engine for municipal corporations.
-Your task is to analyze reported civic complaints (title, description, location, and optional photo) and produce an authoritative municipal triage assessment.
+  const systemPrompt = `You are CivicResolve AI, an expert municipal triage engine.
+Analyze the citizen civic complaint and return strict JSON assessment.
 
-Available Categories:
+Categories:
 - "Roads & Infrastructure"
 - "Sanitation & Waste"
 - "Street Lighting"
@@ -156,28 +189,11 @@ Available Categories:
 - "Public Safety"
 - "Other"
 
-Available Priorities:
-- "Low" (minor aesthetic or non-urgent maintenance)
-- "Medium" (inconvenience, moderate delay permissible)
-- "High" (major disruption, traffic blockage, severe sanitation risk)
-- "Critical" (imminent threat to life, live electrical wires, flooding, open shafts)
-
-Recommended Department examples:
-- "Public Works Department"
-- "Municipal Sanitation"
-- "Electricity Board"
-- "Water Supply Board"
-- "Police/Public Safety"
-- "General Administration"
+Priorities: "Low", "Medium", "High", "Critical"
 
 STRICT OUTPUT REQUIREMENT:
-You MUST respond ONLY with a raw JSON object (no markdown, no backticks, no explanatory chatter) containing these exact keys:
-{
-  "category": string (must be one of the 6 categories above),
-  "priority": string (one of "Low", "Medium", "High", "Critical"),
-  "recommendedDepartment": string,
-  "aiReasoning": string (1-2 crisp sentences explaining the urgency, public risk, and civic impact)
-}`;
+Respond ONLY with a JSON object conforming to the schema with:
+category, priority, recommendedDepartment, aiReasoning (1-2 crisp sentences on urgency and impact).`;
 
   const userPrompt = `Analyze this citizen complaint:
 Title: ${title}
@@ -185,82 +201,109 @@ Description: ${description}
 Location: ${location || "Not specified"}
 User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
 
-  // 1. Attempt using official @google/genai SDK
-  try {
-    const ai = new GoogleGenAI({ apiKey: key.trim() });
-    const contents = [];
+  // Set up 15-second AbortController
+  const controller = new AbortController();
+  const timeoutMs = 15000;
+  let timeoutTriggered = false;
 
-    if (imageBase64 && imageBase64.includes(",")) {
-      const [header, base64Data] = imageBase64.split(",");
-      const mimeMatch = header.match(/data:([^;]+);base64/);
-      const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+  const timeoutId = setTimeout(() => {
+    timeoutTriggered = true;
+    controller.abort(new Error("Gemini call timed out after 15 seconds"));
+  }, timeoutMs);
+
+  const timeoutPromise = new Promise((_, reject) => {
+    controller.signal.addEventListener("abort", () => {
+      reject(new Error("Gemini call timed out after 15 seconds"));
+    });
+  });
+
+  try {
+    // Primary attempt: @google/genai SDK
+    const runSdkCall = async () => {
+      const ai = new GoogleGenAI({ apiKey: key.trim() });
+      const contents = [];
+
+      if (imageBase64 && imageBase64.includes(",")) {
+        const [header, base64Data] = imageBase64.split(",");
+        const mimeMatch = header.match(/data:([^;]+);base64/);
+        const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+        contents.push({
+          inlineData: {
+            mimeType,
+            data: base64Data
+          }
+        });
+      }
+
       contents.push({
-        inlineData: {
-          mimeType,
-          data: base64Data
+        text: `${systemPrompt}\n\n${userPrompt}`
+      });
+
+      const response = await ai.models.generateContent({
+        model: model.trim(),
+        contents: contents,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA,
+          maxOutputTokens: 400,
+          thinkingConfig: {
+            thinkingBudget: 0
+          }
         }
       });
+
+      const responseText = response.text;
+      return cleanJsonOutput(responseText);
+    };
+
+    let parsed;
+    try {
+      parsed = await Promise.race([runSdkCall(), timeoutPromise]);
+    } catch (sdkError) {
+      if (timeoutTriggered || controller.signal.aborted) {
+        throw sdkError;
+      }
+      console.warn("CivicResolve: @google/genai SDK error, falling back to direct REST API:", sdkError);
+      // Secondary attempt: Direct REST with abort signal
+      parsed = await Promise.race([
+        callGeminiRest({
+          apiKey: key.trim(),
+          model: model.trim(),
+          systemPrompt,
+          userPrompt,
+          imageBase64,
+          signal: controller.signal
+        }),
+        timeoutPromise
+      ]);
     }
 
-    contents.push({
-      text: `${systemPrompt}\n\n${userPrompt}`
-    });
-
-    const response = await ai.models.generateContent({
-      model: model.trim(),
-      contents: contents,
-      config: {
-        responseMimeType: "application/json"
-      }
-    });
-
-    const responseText = response.text;
-    const parsed = cleanJsonOutput(responseText);
+    clearTimeout(timeoutId);
 
     const category = CATEGORIES.includes(parsed.category) ? parsed.category : "Roads & Infrastructure";
     const priority = PRIORITIES.includes(parsed.priority) ? parsed.priority : "Medium";
     const recommendedDepartment = parsed.recommendedDepartment || "Public Works Department";
-    const aiReasoning = parsed.aiReasoning || "Automated triage performed by Gemini vision-language model.";
+    const aiReasoning = parsed.aiReasoning || "Automated triage performed by Gemini model.";
 
     return {
       category,
       priority,
       recommendedDepartment,
       aiReasoning,
-      isMock: false
+      isMock: false,
+      aiMode: "Gemini 3.8 Flash"
     };
 
-  } catch (sdkError) {
-    console.warn("CivicResolve @google/genai SDK failed, attempting direct REST fallback:", sdkError);
+  } catch (error) {
+    clearTimeout(timeoutId);
+    // Log the exact error to the browser console as requested
+    console.error("CivicResolve Gemini API exact error:", error);
 
-    // 2. Direct REST Fallback
-    try {
-      const parsed = await callGeminiRest({
-        apiKey: key.trim(),
-        model: model.trim(),
-        systemPrompt,
-        userPrompt,
-        imageBase64
-      });
+    const isTimeout = timeoutTriggered || error.name === "AbortError" || (error.message && error.message.includes("timed out"));
+    const shortReason = isTimeout ? "15s Timeout" : (error.message && error.message.includes("404") ? "Model Unavailable" : "API Error");
 
-      const category = CATEGORIES.includes(parsed.category) ? parsed.category : "Roads & Infrastructure";
-      const priority = PRIORITIES.includes(parsed.priority) ? parsed.priority : "Medium";
-      const recommendedDepartment = parsed.recommendedDepartment || "Public Works Department";
-      const aiReasoning = parsed.aiReasoning || "Automated triage performed by Gemini vision-language model.";
-
-      return {
-        category,
-        priority,
-        recommendedDepartment,
-        aiReasoning,
-        isMock: false
-      };
-    } catch (restError) {
-      console.error("CivicResolve Gemini REST also failed:", restError);
-      // 3. Graceful fallback to keyword mock so the app NEVER crashes
-      const fallback = mockClassifyIssue(title, description);
-      fallback.aiReasoning = `${fallback.aiReasoning} (API fallback: ${restError.message || sdkError.message || "Quota/Network"})`;
-      return fallback;
-    }
+    const fallback = mockClassifyIssue(title, description, shortReason);
+    fallback.aiReasoning = `${fallback.aiReasoning} (Fallback reason: ${error.message || shortReason})`;
+    return fallback;
   }
 }
