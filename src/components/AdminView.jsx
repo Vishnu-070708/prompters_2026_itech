@@ -214,13 +214,13 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
 
   // AUTHENTICATED ADMIN DASHBOARD
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-7">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-100 pb-5">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-white">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-900 text-white">
               Official Admin
             </span>
             <span className="text-xs text-emerald-600 font-semibold flex items-center space-x-1">
@@ -228,7 +228,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
               <span>Authorized Session</span>
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-950 tracking-tight mt-1">
             Municipal Operations Command Center
           </h1>
         </div>
@@ -239,7 +239,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
             data-testid="ai-daily-dispatch-btn"
             onClick={handleGenerateDispatch}
             disabled={isGeneratingDispatch}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-sky-700 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md flex items-center space-x-2 transition-all disabled:opacity-60 cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-800 to-accent-600 hover:from-brand-900 hover:to-accent-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-brand-900/15 flex items-center space-x-2 transition-all hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer"
           >
             {isGeneratingDispatch ? (
               <>
@@ -374,7 +374,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
       {/* KPI STATS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm hover:-translate-y-0.5 transition-transform">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
             <span>Total Docket</span>
             <FileSpreadsheet className="w-4 h-4 text-sky-600" />
@@ -383,7 +383,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
           <span className="text-xs text-slate-500 mt-1 block">Active civic reports</span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm hover:-translate-y-0.5 transition-transform">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
             <span>Resolution Rate</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -392,7 +392,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
           <span className="text-xs text-slate-500 mt-1 block">{stats.resolved} of {stats.total} complaints closed</span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm hover:-translate-y-0.5 transition-transform">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
             <span>Critical Unresolved</span>
             <Flame className="w-4 h-4 text-rose-600" />
@@ -401,7 +401,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
           <span className="text-xs text-rose-700 font-medium mt-1 block">Requires instant dispatch</span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm hover:-translate-y-0.5 transition-transform">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
             <span>AI Triage Latency</span>
             <Sparkles className="w-4 h-4 text-indigo-600" />
@@ -413,28 +413,26 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
       </div>
 
       {/* DEPARTMENT WORKLOAD BREAKDOWN */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm">
         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4 flex items-center space-x-2">
           <Building2 className="w-4 h-4 text-sky-600" />
           <span>Departmental Workload Allocation</span>
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {Object.entries(stats.deptCounts).map(([dept, count]) => (
-            <div key={dept} className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-              <span className="text-xl font-extrabold text-slate-900 block">{count}</span>
-              <span className="text-[11px] font-medium text-slate-600 block mt-0.5 line-clamp-1" title={dept}>
-                {dept}
-              </span>
+            <div key={dept} className="p-3 rounded-xl bg-surface-50 border border-surface-200">
+              <div className="flex items-center justify-between gap-3"><span className="text-[11px] font-bold text-slate-700 truncate" title={dept}>{dept}</span><span className="text-sm font-extrabold text-brand-800">{count}</span></div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-100"><div className="h-full rounded-full bg-gradient-to-r from-brand-600 to-accent-500" style={{ width: `${stats.total ? Math.max(8, (count / stats.total) * 100) : 0}%` }} /></div>
             </div>
           ))}
         </div>
       </div>
 
       {/* COMPLAINTS DISPATCH & MANAGEMENT LIST */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-surface-200 shadow-sm overflow-hidden">
         
         {/* Table Filters */}
-        <div className="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70">
+        <div className="p-5 border-b border-surface-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-brand-50/50">
           <div>
             <h3 className="font-extrabold text-slate-900 text-base">Municipal Action Docket</h3>
             <p className="text-xs text-slate-500">Edit status, reassign department, or attach official resolution notes.</p>
