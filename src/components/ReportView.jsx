@@ -204,7 +204,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                 <Sparkles className="w-4 h-4 text-sky-600" />
                 <span>AI Automated Triage Result</span>
               </div>
-              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+              <span data-testid="ai-mode-badge" className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                 submissionResult.aiMode.includes('Mock') 
                   ? 'bg-amber-100 text-amber-800' 
                   : 'bg-indigo-100 text-indigo-800'

@@ -78,9 +78,8 @@ export default function AdminView({ complaints, onUpdateComplaint }) {
   }, [complaints]);
 
   // Handle Note Save
-  const handleSaveNotes = (id) => {
-    const note = notesDrafts[id];
-    if (note === undefined) return;
+  const handleSaveNotes = (id, fallbackVal = '') => {
+    const note = notesDrafts[id] !== undefined ? notesDrafts[id] : fallbackVal;
     onUpdateComplaint(id, { adminNotes: note });
     setSavedSuccessMap(prev => ({ ...prev, [id]: true }));
     setTimeout(() => {
@@ -354,6 +353,7 @@ export default function AdminView({ complaints, onUpdateComplaint }) {
                 </label>
                 <div className="flex gap-2">
                   <input
+                    data-testid="admin-note-input"
                     type="text"
                     placeholder="e.g. Crew assigned to patch road; expected completion by 6 PM today."
                     value={notesDrafts[item.id] !== undefined ? notesDrafts[item.id] : (item.adminNotes || '')}
@@ -361,7 +361,11 @@ export default function AdminView({ complaints, onUpdateComplaint }) {
                     className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
                   />
                   <button
-                    onClick={() => handleSaveNotes(item.id)}
+                    data-testid="admin-save-note-btn"
+                    onClick={(e) => {
+                      const input = e.currentTarget.parentElement?.querySelector('input');
+                      handleSaveNotes(item.id, input ? input.value : item.adminNotes);
+                    }}
                     className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs flex items-center space-x-1.5 transition-colors"
                   >
                     {savedSuccessMap[item.id] ? (
