@@ -272,43 +272,52 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 sm:py-10">
       
       {/* Page Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-semibold mb-3">
-          <Sparkles className="w-3.5 h-3.5 text-sky-600" />
-          <span>Intelligent Civic Redressal</span>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 px-6 py-9 text-white shadow-xl shadow-brand-900/15 sm:px-10 sm:py-11 mb-8">
+        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-accent-500/20 blur-3xl" />
+        <div className="relative text-center">
+          <div className="inline-flex items-center space-x-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-accent-100">
+            <Sparkles className="w-3.5 h-3.5 text-accent-100" />
+            <span>Intelligent civic response</span>
+          </div>
+          <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">Report a Civic Issue</h1>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-brand-100 sm:text-base">
+            Turn a local concern into a clear, trackable action for the right municipal team.
+          </p>
+          <div className="mx-auto mt-7 grid max-w-2xl grid-cols-3 gap-2 text-left sm:gap-3">
+            {[[FileText, '1', 'Report'], [Sparkles, '2', 'AI triage'], [CheckCircle2, '3', 'Track']].map(([Icon, number, label]) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                <div className="flex items-center gap-2"><Icon className="h-4 w-4 text-accent-100" /><span className="text-[10px] font-bold text-brand-200">{number}</span></div>
+                <p className="mt-1 text-xs font-bold text-white sm:text-sm">{label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
-          Report a Civic Issue
-        </h1>
-        <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-xl mx-auto">
-          Submit potholes, broken streetlights, waste accumulation, or drainage faults. Our Gemini AI engine categorizes, prioritizes, and routes it immediately.
-        </p>
       </div>
 
       {/* SUCCESS RESULT CARD */}
       {submissionResult && (
-        <div className="mb-8 p-6 bg-white rounded-2xl border-2 border-emerald-500 shadow-xl animate-fadeIn">
+        <div className="mb-8 overflow-hidden rounded-3xl border border-brand-100 bg-white p-6 shadow-2xl shadow-brand-900/10 animate-fadeIn sm:p-8">
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+              <div className="w-12 h-12 rounded-2xl bg-accent-100 text-accent-700 flex items-center justify-center font-bold">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <span className="text-xs font-bold uppercase tracking-wider text-accent-700 bg-accent-50 px-2 py-0.5 rounded-full border border-accent-100">
                   Successfully Registered
                 </span>
                 <h3 className="text-xl font-bold text-slate-900 mt-0.5">
-                  Complaint Filed: <span className="font-mono text-sky-700">{submissionResult.id}</span>
+                  Complaint Filed: <span className="font-mono text-brand-700">{submissionResult.id}</span>
                 </h3>
               </div>
             </div>
 
             <button
               onClick={() => handleCopyId(submissionResult.id)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-surface-200 hover:bg-surface-50 text-xs font-semibold text-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copiedId ? 'Copied' : 'Copy ID'}</span>
@@ -316,56 +325,57 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
           </div>
 
           {/* AI Triage Summary Box */}
-          <div className="mt-5 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-700 uppercase tracking-wide">
-                <Sparkles className="w-4 h-4 text-sky-600" />
-                <span>AI Automated Triage Result</span>
+          <div className="mt-6 space-y-4 rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 to-accent-50/40 p-4 sm:p-5">
+            <div className="flex items-center justify-between border-b border-brand-100 pb-3">
+              <div className="flex items-center space-x-1.5 text-xs font-bold text-brand-800 uppercase tracking-wide">
+                <Sparkles className="w-4 h-4 text-accent-600" />
+                <span>Gemini triage</span>
               </div>
               <span data-testid="ai-mode-badge" className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                 submissionResult.aiMode.includes('Mock') 
                   ? 'bg-amber-100 text-amber-800' 
-                  : 'bg-indigo-100 text-indigo-800'
+                  : 'bg-brand-100 text-brand-800'
               }`}>
                 {submissionResult.aiMode}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
-              <div className="p-2.5 rounded-lg bg-white border border-slate-200 col-span-2 sm:col-span-1">
+            <div className="grid grid-cols-2 gap-3 pt-1 sm:grid-cols-5">
+              <div className="col-span-2 rounded-xl border border-white bg-white/90 p-3 sm:col-span-1">
                 <span className="text-[11px] text-slate-500 font-medium block">Category</span>
                 <span className="text-sm font-bold text-slate-800 truncate block">{submissionResult.category}</span>
               </div>
-              <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+              <div className={`rounded-xl border p-3 ${submissionResult.priority === 'Critical' ? 'border-red-200 bg-red-50' : submissionResult.priority === 'High' ? 'border-orange-200 bg-orange-50' : submissionResult.priority === 'Medium' ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
                 <span className="text-[11px] text-slate-500 font-medium block">Assessed Priority</span>
                 <span className={`text-sm font-extrabold ${
-                  submissionResult.priority === 'Critical' ? 'text-rose-600' :
-                  submissionResult.priority === 'High' ? 'text-amber-600' :
-                  submissionResult.priority === 'Medium' ? 'text-yellow-600' : 'text-emerald-600'
+                  submissionResult.priority === 'Critical' ? 'text-priority-critical' :
+                  submissionResult.priority === 'High' ? 'text-priority-high' :
+                  submissionResult.priority === 'Medium' ? 'text-priority-medium' : 'text-priority-low'
                 }`}>
                   {submissionResult.priority}
                 </span>
               </div>
-              <div className="p-2.5 rounded-lg bg-white border border-slate-200" data-testid="triage-severity">
+              <div className="rounded-xl border border-white bg-white/90 p-3" data-testid="triage-severity">
                 <span className="text-[11px] text-slate-500 font-medium block">Severity Score</span>
-                <span className="text-sm font-extrabold text-indigo-700">
+                <span className="text-sm font-extrabold text-brand-700">
                   {submissionResult.severityScore || 5} <span className="text-xs font-normal text-slate-400">/ 10</span>
                 </span>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-100"><div className="h-full rounded-full bg-gradient-to-r from-accent-500 via-amber-400 to-red-500" style={{ width: `${Math.min(10, Math.max(1, submissionResult.severityScore || 5)) * 10}%` }} /></div>
               </div>
-              <div className="p-2.5 rounded-lg bg-white border border-slate-200" data-testid="triage-est-time">
+              <div className="rounded-xl border border-white bg-white/90 p-3" data-testid="triage-est-time">
                 <span className="text-[11px] text-slate-500 font-medium block">Est. Resolution</span>
                 <span className="text-sm font-bold text-slate-800 truncate block">
                   {submissionResult.estimatedResolutionTime || "24-48 hours"}
                 </span>
               </div>
-              <div className="p-2.5 rounded-lg bg-white border border-slate-200 col-span-2 sm:col-span-1">
+              <div className="col-span-2 rounded-xl border border-white bg-white/90 p-3 sm:col-span-1">
                 <span className="text-[11px] text-slate-500 font-medium block">Assigned Dept</span>
                 <span className="text-sm font-bold text-slate-800 truncate block">{submissionResult.recommendedDepartment}</span>
               </div>
             </div>
 
-            <div className="text-xs text-slate-700 bg-sky-50/70 p-3 rounded-lg border border-sky-100">
-              <strong className="text-sky-900 block mb-0.5 font-semibold">AI Impact Assessment:</strong>
+            <div className="rounded-xl border border-brand-100 bg-white/70 p-3 text-xs leading-relaxed text-slate-700">
+              <strong className="mb-0.5 block font-semibold text-brand-900">AI Impact Assessment:</strong>
               {submissionResult.aiReasoning}
             </div>
           </div>
@@ -379,7 +389,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
             </button>
             <button
               onClick={onViewTrack}
-              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm shadow-md transition-colors"
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-700 to-accent-600 hover:from-brand-800 hover:to-accent-700 text-white font-semibold text-sm shadow-md shadow-brand-900/15 transition-all hover:-translate-y-0.5"
             >
               <span>View in Tracking Dashboard</span>
               <ArrowRight className="w-4 h-4" />
@@ -389,12 +399,12 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
       )}
 
       {/* REPORT FORM */}
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <div className="overflow-hidden rounded-3xl border border-surface-200 bg-white shadow-xl shadow-brand-900/5">
         
         {/* Form header accent */}
-        <div className="h-2 bg-gradient-to-r from-sky-500 via-indigo-500 to-sky-600"></div>
+        <div className="h-2 bg-gradient-to-r from-brand-800 via-brand-500 to-accent-500"></div>
 
-        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 p-6 sm:p-8">
 
           {validationError && (
             <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start space-x-2">
@@ -414,7 +424,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
               placeholder="e.g. Dangerous 2-foot pothole causing skids near bus stop"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-900 placeholder-slate-400 text-sm shadow-sm"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 bg-surface-50/60 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 placeholder-slate-400 text-sm transition-shadow focus:bg-white focus:shadow-sm"
             />
           </div>
 
@@ -429,7 +439,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
               placeholder="Describe the condition, how long it has been there, hazards to residents, and any specific landmarks..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-900 placeholder-slate-400 text-sm shadow-sm"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 bg-surface-50/60 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 placeholder-slate-400 text-sm transition-shadow focus:bg-white focus:shadow-sm"
             />
           </div>
 
@@ -449,7 +459,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                     setLocation(e.target.value);
                     if (locationNote) setLocationNote('');
                   }}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-900 placeholder-slate-400 text-sm shadow-sm"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-surface-200 bg-surface-50/60 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 placeholder-slate-400 text-sm transition-shadow focus:bg-white focus:shadow-sm"
                 />
               </div>
               <button
@@ -457,7 +467,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                 data-testid="use-location-btn"
                 onClick={handleGetLocation}
                 disabled={isLocating}
-                className="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm flex items-center space-x-1.5 transition-colors border border-slate-200 cursor-pointer disabled:opacity-70"
+                className="px-4 py-3 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-800 font-semibold text-xs sm:text-sm flex items-center space-x-1.5 transition-colors border border-brand-100 cursor-pointer disabled:opacity-70"
               >
                 {isLocating ? (
                   <>
@@ -492,7 +502,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-900 text-sm bg-white shadow-sm"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 bg-surface-50/60 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 text-sm transition-shadow focus:bg-white focus:shadow-sm"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
@@ -578,7 +588,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-sky-700 hover:from-sky-700 hover:to-indigo-800 text-white font-bold text-base shadow-lg shadow-sky-600/25 transition-all flex items-center justify-center space-x-2 disabled:opacity-70 cursor-pointer"
+              className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-brand-800 via-brand-600 to-accent-600 hover:from-brand-900 hover:to-accent-700 text-white font-bold text-base shadow-lg shadow-brand-900/20 transition-all hover:-translate-y-0.5 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:hover:translate-y-0 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
