@@ -143,15 +143,15 @@ async function runTests() {
         const submit = await page.waitForSelector('button[type="submit"]');
         await submit.click();
 
-        await page.waitForSelector('.bg-white.rounded-2xl.border-2.border-emerald-500', { timeout: 35000 });
+        await page.waitForSelector('[data-testid="triage-result-card"]', { timeout: 35000 });
         
         const cardData = await page.evaluate(() => {
-          const idEl = document.querySelector('span.font-mono.text-sky-700');
-          const catEl = document.querySelector('.grid div:nth-child(1) span.text-sm');
-          const prioEl = document.querySelector('.grid div:nth-child(2) span.text-sm');
-          const deptEl = document.querySelector('.grid div:nth-child(3) span.text-sm');
+          const idEl = document.querySelector('[data-testid="triage-tracking-id"]') || document.querySelector('span.font-mono');
+          const catEl = document.querySelector('[data-testid="triage-result-card"] .grid div:nth-child(1) span.text-sm');
+          const prioEl = document.querySelector('[data-testid="triage-result-card"] .grid div:nth-child(2) span.text-sm');
+          const deptEl = document.querySelector('[data-testid="triage-result-card"] .grid div:nth-child(5) span.text-sm') || document.querySelector('[data-testid="triage-result-card"] .grid div:nth-child(3) span.text-sm');
           const badgeEl = document.querySelector('[data-testid="ai-mode-badge"]');
-          const reasonEl = document.querySelector('.text-xs.text-slate-700.bg-sky-50\\/70');
+          const reasonEl = document.querySelector('[data-testid="triage-result-card"]');
           return {
             id: idEl?.textContent || '',
             category: catEl?.textContent || '',
@@ -224,8 +224,8 @@ async function runTests() {
       const submit = await page.waitForSelector('button[type="submit"]');
       await submit.click();
 
-      await page.waitForSelector('.bg-white.rounded-2xl.border-2.border-emerald-500', { timeout: 35000 });
-      const photoComplaintId = await page.$eval('span.font-mono.text-sky-700', el => el.textContent);
+      await page.waitForSelector('[data-testid="triage-result-card"]', { timeout: 35000 });
+      const photoComplaintId = await page.$eval('[data-testid="triage-tracking-id"]', el => el.textContent);
       submittedIds.push(photoComplaintId);
 
       record('2. Photo Upload, Snap-to-Fill & Submission', 'PASS', `Photo preview rendered, Snap-to-Fill populated editable fields, and report submitted with ID ${photoComplaintId}`);
@@ -251,7 +251,7 @@ async function runTests() {
       await searchInput.type(targetId);
       await new Promise(r => setTimeout(r, 500));
 
-      const filteredCards = await page.$$eval('.bg-white.rounded-2xl.border.border-slate-200.shadow-sm', cards => cards.length);
+      const filteredCards = await page.$$eval('[data-testid="complaint-card"]', cards => cards.length);
       const searchOk = filteredCards >= 1;
 
       // Clear search input
@@ -273,7 +273,7 @@ async function runTests() {
           statusSelect.value = 'Resolved';
           statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        return document.querySelectorAll('.bg-white.rounded-2xl.border.border-slate-200.shadow-sm').length;
+        return document.querySelectorAll('[data-testid="complaint-card"]').length;
       });
 
       // Reset Status Filter to 'All'
