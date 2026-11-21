@@ -63,6 +63,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   const [copiedId, setCopiedId] = useState(false);
   const [isAnalyzingPhoto, setIsAnalyzingPhoto] = useState(false);
   const [snapSuccess, setSnapSuccess] = useState('');
+  const [photoValidation, setPhotoValidation] = useState(null);
 
   // Stats computed from complaints data
   const totalFiled = complaints.length;
@@ -165,17 +166,22 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
     try {
       const compressedImage = await compressImageForStorage(file);
       setImagePreview(compressedImage);
+      setPhotoValidation(null);
       setValidationError('');
+      setSnapSuccess('');
     } catch (err) {
       console.error('Photo compression failed:', err);
       setImagePreview(null);
+      setPhotoValidation(null);
       setValidationError('Unable to prepare this photo. Please try a different image.');
     }
   };
 
   const handleRemoveImage = () => {
     setImagePreview(null);
+    setPhotoValidation(null);
     setSnapSuccess('');
+    setValidationError('');
   };
 
   // Snap-to-Fill: AI Vision analysis of uploaded photo
@@ -192,6 +198,15 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         modelName
       });
 
+      if (!result.is_valid_civic_issue || (typeof result.confidence === 'number' && result.confidence < 0.6)) {
+        setPhotoValidation({ isValid: false, reason: result.reason, confidence: result.confidence });
+        setCategory('Auto-detect with AI');
+        const reasonSuffix = result.reason ? ` Reason: ${result.reason}` : '';
+        setValidationError(`This image doesn't appear to show a civic issue. Please upload a clear photo of the problem (for example a pothole, garbage, or a broken streetlight).${reasonSuffix}`);
+        return;
+      }
+
+      setPhotoValidation({ isValid: true, reason: result.reason, confidence: result.confidence });
       if (result.title) setTitle(result.title);
       if (result.description) setDescription(result.description);
       if (result.category) setCategory(result.category);
@@ -210,6 +225,12 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
     e.preventDefault();
     setValidationError('');
 
+    if (photoValidation && !photoValidation.isValid) {
+      const reasonSuffix = photoValidation.reason ? ` Reason: ${photoValidation.reason}` : '';
+      setValidationError(`This image doesn't appear to show a civic issue. Please upload a clear photo of the problem (for example a pothole, garbage, or a broken streetlight).${reasonSuffix}`);
+      return;
+    }
+
     if (!title.trim()) {
       setValidationError('Please enter a title for the issue.');
       return;
@@ -217,6 +238,29 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
     if (!description.trim()) {
       setValidationError('Please describe the issue in detail.');
       return;
+    }
+
+    // If an image is attached and has not been verified yet, verify it before creating a complaint
+    if (imagePreview && !photoValidation) {
+      setIsSubmitting(true);
+      try {
+        const check = await analyzePhotoWithGemini({
+          imageBase64: imagePreview,
+          apiKey,
+          modelName
+        });
+        if (!check.is_valid_civic_issue || (typeof check.confidence === 'number' && check.confidence < 0.6)) {
+          setPhotoValidation({ isValid: false, reason: check.reason, confidence: check.confidence });
+          setCategory('Auto-detect with AI');
+          const reasonSuffix = check.reason ? ` Reason: ${check.reason}` : '';
+          setValidationError(`This image doesn't appear to show a civic issue. Please upload a clear photo of the problem (for example a pothole, garbage, or a broken streetlight).${reasonSuffix}`);
+          setIsSubmitting(false);
+          return;
+        }
+        setPhotoValidation({ isValid: true, reason: check.reason, confidence: check.confidence });
+      } catch (err) {
+        console.warn("Pre-submission photo verification warning:", err);
+      }
     }
 
     setIsSubmitting(true);
@@ -278,6 +322,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
       setLocationNote('');
       setCategory('Auto-detect with AI');
       setImagePreview(null);
+      setPhotoValidation(null);
 
     } catch (err) {
       console.error(err);
@@ -747,6 +792,24 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                     Remove Photo
                   </button>
                 </div>
+
+                {photoValidation && !photoValidation.isValid && (
+                  <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs space-y-1.5 animate-fade-in" data-testid="photo-validation-error">
+                    <div className="flex items-start space-x-2">
+                      <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="font-semibold text-rose-200">
+                          This image doesn't appear to show a civic issue. Please upload a clear photo of the problem (for example a pothole, garbage, or a broken streetlight).
+                        </p>
+                        {photoValidation.reason && (
+                          <p className="text-[11px] text-rose-300/90 font-normal">
+                            <span className="font-semibold text-rose-200">AI Observation:</span> {photoValidation.reason}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {snapSuccess && (
                   <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center space-x-2 animate-fade-in">

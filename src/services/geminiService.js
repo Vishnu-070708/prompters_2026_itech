@@ -58,24 +58,38 @@ const RESPONSE_SCHEMA = {
   required: ["category", "priority", "severityScore", "estimatedResolutionTime", "recommendedDepartment", "aiReasoning"]
 };
 
-const SNAP_TO_FILL_SCHEMA = {
+const IMAGE_VERIFIER_SCHEMA = {
   type: "object",
   properties: {
-    title: {
-      type: "string",
-      description: "Plain, specific issue title written by a resident, max 8 words (e.g. 'Deep pothole with cracked road surface')"
-    },
-    description: {
-      type: "string",
-      description: "1-2 simple sentences in first person or neutral voice describing only what is visible and why it is a problem without mentioning AI or images"
+    is_valid_civic_issue: {
+      type: "boolean",
+      description: "True ONLY if the image clearly shows a real civic or public infrastructure issue"
     },
     category: {
       type: "string",
-      enum: CATEGORIES
+      description: "One of: Roads & Infrastructure, Sanitation & Waste, Street Lighting, Water Supply & Drainage, Public Safety, Other, or 'none' if not a civic issue"
+    },
+    confidence: {
+      type: "number",
+      description: "Confidence score between 0 and 1"
+    },
+    title: {
+      type: "string",
+      description: "Plain, specific issue title written by a resident, max 8 words (leave empty if not civic)"
+    },
+    visible_description: {
+      type: "string",
+      description: "1-2 simple sentences in resident voice describing only what is visible"
+    },
+    reason: {
+      type: "string",
+      description: "One short sentence explaining what the image actually shows or verification reason"
     }
   },
-  required: ["title", "description", "category"]
+  required: ["is_valid_civic_issue", "category", "confidence", "visible_description", "reason"]
 };
+
+const SNAP_TO_FILL_SCHEMA = IMAGE_VERIFIER_SCHEMA;
 
 const DISPATCH_SUMMARY_SCHEMA = {
   type: "object",
@@ -247,17 +261,22 @@ export function mockClassifyIssue(title, description, reason = "Local Heuristic"
  * Clean and parse strict JSON from Gemini model output
  */
 function cleanJsonOutput(text) {
-  let cleaned = text.trim();
-  if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  try {
+    let cleaned = text.trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    }
+    return JSON.parse(cleaned.trim());
+  } catch (err) {
+    console.warn("CivicResolve: Failed to parse JSON response from model:", err?.message || err);
+    return null;
   }
-  return JSON.parse(cleaned.trim());
 }
 
 /**
  * Single attempt to call Gemini via REST API with 15s timeout
  */
-async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema = RESPONSE_SCHEMA, timeoutMs = 15000 }) {
+async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema = RESPONSE_SCHEMA, temperature = 0.1, timeoutMs = 15000 }) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
   const controller = new AbortController();
@@ -285,7 +304,9 @@ async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, i
   // Configure generation options
   const generationConfig = {
     response_mime_type: "application/json",
+    responseMimeType: "application/json",
     response_schema: responseSchema,
+    temperature: typeof temperature === 'number' ? temperature : 0.1,
     max_output_tokens: 500
   };
 
@@ -330,9 +351,9 @@ async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, i
 /**
  * Attempt call with 1 retry after 2 seconds if status is 503 or timeout
  */
-async function callWithRetry({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema = RESPONSE_SCHEMA }) {
+async function callWithRetry({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema = RESPONSE_SCHEMA, temperature = 0.1 }) {
   try {
-    return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema, timeoutMs: 15000 });
+    return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema, temperature, timeoutMs: 15000 });
   } catch (firstError) {
     const is503 = firstError.status === 503 || (firstError.message && firstError.message.includes("503"));
     const isTimeout = firstError.name === "AbortError" || (firstError.message && firstError.message.includes("Timeout"));
@@ -341,7 +362,7 @@ async function callWithRetry({ apiKey, model, systemPrompt, userPrompt, imageBas
       console.warn(`CivicResolve: ${model} failed with ${is503 ? '503 (High Demand)' : 'Timeout'}. Retrying in 2 seconds...`);
       // Wait 2 seconds before retry
       await new Promise(r => setTimeout(r, 2000));
-      return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema, timeoutMs: 15000 });
+      return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema, temperature, timeoutMs: 15000 });
     }
     // If other error, throw immediately to try next model in fallback list
     throw firstError;
@@ -431,7 +452,7 @@ User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
       setCachedWorkingModel(modelToTry);
       console.log(`CivicResolve: Successfully triaged using: ${modelToTry}`);
 
-      const category = CATEGORIES.includes(parsed.category) ? parsed.category : "Roads & Infrastructure";
+      const category = CATEGORIES.includes(parsed.category) ? parsed.category : "Other";
       const priority = PRIORITIES.includes(parsed.priority) ? parsed.priority : "Medium";
       const recommendedDepartment = clampText(parsed.recommendedDepartment, "Public Works Department", 80);
       const aiReasoning = clampText(parsed.aiReasoning, "Automated triage performed by Gemini model.", 320);
@@ -478,9 +499,13 @@ User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
  */
 export function mockAnalyzePhoto(reason = "Local Heuristic") {
   return {
+    is_valid_civic_issue: true,
+    confidence: 0.95,
     title: "Deep pothole with cracked road surface",
     description: "There is a large pothole in the middle of the road with cracked pavement around it. It is dangerous for two-wheelers and cars.",
+    visible_description: "There is a large pothole in the middle of the road with cracked pavement around it. It is dangerous for two-wheelers and cars.",
     category: "Roads & Infrastructure",
+    reason: "Photo visibly displays damaged road asphalt and cavity.",
     isMock: true,
     mockReason: reason,
     modelUsed: `Mock AI mode (${reason})`
@@ -488,8 +513,8 @@ export function mockAnalyzePhoto(reason = "Local Heuristic") {
 }
 
 /**
- * Snap-to-Fill: Analyzes uploaded photo using Gemini Vision to extract
- * title, description, and category.
+ * Snap-to-Fill: Analyzes uploaded photo using Gemini Vision to verify and extract
+ * title, description, and category. Validates first before classifying.
  */
 export async function analyzePhotoWithGemini({ imageBase64, apiKey, modelName }) {
   const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
@@ -518,18 +543,15 @@ export async function analyzePhotoWithGemini({ imageBase64, apiKey, modelName })
     }
   }
 
-  const systemPrompt = `You are helping a resident write a short civic complaint note based on a photograph.
-Write the title and description exactly as a local resident would write them, NOT an AI report.
+  const systemPrompt = `You are a civic issue image verifier. Look ONLY at what is actually visible in the image. Do not guess, do not assume, and do not force the image into a category.
+Step 1: Decide whether the image clearly shows a real civic or public infrastructure issue (for example a pothole, garbage dump, broken streetlight, water leakage, damaged road, open drain, fallen tree, or illegal dumping).
+Step 2: If it does, set is_valid_civic_issue to true, pick the matching category, provide a title (maximum 8 words, plain and specific, resident style), and describe only what is visible in 1-2 simple sentences in resident voice. Never use phrases like "visual analysis", "the uploaded photo", "the photo shows", "the image shows", or "reveals". Do not mention AI.
+Step 3: If the image does not clearly show a civic issue, or is blurry, dark, unrelated, a person, an indoor scene, or a screenshot, set is_valid_civic_issue to false, set category to 'none', leave title empty, and explain in one short sentence what the image actually shows.
+Never mention a pothole or any issue unless it is visibly present. If you are unsure, return is_valid_civic_issue false with low confidence.
+Return ONLY valid JSON in this shape:
+{ "is_valid_civic_issue": boolean, "category": string, "confidence": number between 0 and 1, "title": string, "visible_description": string, "reason": string }`;
 
-Strict rules:
-- Title: maximum 8 words, plain and specific (e.g. "Deep pothole with cracked road surface", "Overflowing trash bin on the pavement").
-- Description: 1-2 simple sentences in first person or neutral voice, describing ONLY what is visible and why it is a problem (e.g. "There is a large pothole in the middle of the road with cracked pavement around it. It is dangerous for two-wheelers and cars.").
-- NEVER use phrases like "visual analysis", "the uploaded photo", "the photo shows", "the image shows", "in this image", or "reveals".
-- Do NOT mention AI.
-- Do NOT invent details that are not visible (do not guess street names, city names, how many days it has been there, or people's names).
-- category: exactly one of: "Roads & Infrastructure", "Sanitation & Waste", "Street Lighting", "Water Supply & Drainage", "Public Safety", "Other".`;
-
-  const userPrompt = "Write a resident's civic complaint note for what is seen here: title (max 8 words), description (1-2 simple sentences), and category.";
+  const userPrompt = `Examine this photo carefully. First verify whether it shows a genuine civic or public infrastructure problem. If yes, classify the issue category, generate a resident-voice title (maximum 8 words), and describe what is visible in 1-2 simple sentences. If no or unsure, mark is_valid_civic_issue false, category 'none', and explain what is actually shown.`;
 
   let lastError = null;
 
@@ -542,18 +564,58 @@ Strict rules:
         systemPrompt,
         userPrompt,
         imageBase64,
-        responseSchema: SNAP_TO_FILL_SCHEMA
+        responseSchema: IMAGE_VERIFIER_SCHEMA,
+        temperature: 0.1
       });
 
+      if (!parsed || typeof parsed !== 'object') {
+        console.warn(`CivicResolve Snap-to-Fill: Unparseable response from ${modelToTry}, treating as invalid.`);
+        return {
+          is_valid_civic_issue: false,
+          category: "none",
+          confidence: 0,
+          reason: "Unable to parse image verification response.",
+          visible_description: "",
+          description: "",
+          title: "",
+          isMock: false,
+          modelUsed: modelToTry
+        };
+      }
+
       setCachedWorkingModel(modelToTry);
+
+      const isValid = Boolean(parsed.is_valid_civic_issue);
+      const confidence = typeof parsed.confidence === 'number' ? parsed.confidence : 0;
       const validCategory = CATEGORIES.includes(parsed.category) && parsed.category !== "Auto-detect with AI"
         ? parsed.category
-        : "Roads & Infrastructure";
+        : (isValid ? "Other" : "none");
+
+      if (!isValid || confidence < 0.6 || validCategory === "none") {
+        return {
+          is_valid_civic_issue: false,
+          category: "none",
+          confidence,
+          reason: clampText(parsed.reason, "This image does not appear to show a civic or public infrastructure issue.", 200),
+          visible_description: clampText(parsed.visible_description, "", 250),
+          description: "",
+          title: "",
+          isMock: false,
+          modelUsed: modelToTry
+        };
+      }
+
+      const descriptionText = clampText(parsed.visible_description || parsed.description, "", 300);
+      const titleText = clampText(parsed.title, "", 100);
 
       return {
-        title: parsed.title || "Deep pothole with cracked road surface",
-        description: parsed.description || "There is a large pothole in the middle of the road with cracked pavement around it. It is dangerous for two-wheelers and cars.",
+        is_valid_civic_issue: true,
         category: validCategory,
+        confidence,
+        title: titleText,
+        description: descriptionText,
+        visible_description: descriptionText,
+        reason: clampText(parsed.reason, "Valid civic issue detected.", 200),
         isMock: false,
         modelUsed: modelToTry
       };
@@ -563,8 +625,18 @@ Strict rules:
     }
   }
 
-  console.error("CivicResolve Snap-to-Fill: All models failed, falling back to mock vision:", lastError);
-  return mockAnalyzePhoto(lastError?.message || "Fallback");
+  console.error("CivicResolve Snap-to-Fill: All models failed:", lastError);
+  // Never default to pothole on API error! Return invalid civic issue with error reason
+  return {
+    is_valid_civic_issue: false,
+    category: "none",
+    confidence: 0,
+    reason: lastError?.message || "Image analysis service was unable to process the photo.",
+    visible_description: "",
+    description: "",
+    title: "",
+    isMock: false
+  };
 }
 
 /**
