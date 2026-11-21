@@ -158,7 +158,8 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         imageUrl: imagePreview,
         createdAt: new Date().toISOString(),
         adminNotes: "",
-        aiMode: triage.aiMode || (triage.isMock ? "Mock AI mode" : "Gemini Flash-Lite")
+        aiMode: triage.aiMode || (triage.isMock ? "Mock AI mode" : "Gemini Flash-Lite"),
+        upvotes: 0
       };
 
       onComplaintAdded(newComplaint);

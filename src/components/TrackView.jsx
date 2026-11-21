@@ -11,7 +11,9 @@ import {
   AlertTriangle, 
   Eye, 
   MessageSquare,
-  FileCheck2
+  FileCheck2,
+  ThumbsUp,
+  ArrowUpDown
 } from 'lucide-react';
 
 const STATUS_STAGES = ["Reported", "In Progress", "Resolved"];
@@ -33,11 +35,36 @@ const CATEGORIES = [
   "Other"
 ];
 
-export default function TrackView({ complaints, onSelectReport }) {
+export default function TrackView({ complaints, onSelectReport, onUpvoteComplaint }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'most-upvoted' | 'highest-priority'
+
+  // Track upvoted complaints (one vote per browser in localStorage)
+  const [upvotedIds, setUpvotedIds] = useState(() => {
+    try {
+      const stored = localStorage.getItem('civic_upvoted_complaint_ids');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleUpvote = (complaintId) => {
+    if (upvotedIds.includes(complaintId)) return;
+    const nextVoted = [...upvotedIds, complaintId];
+    setUpvotedIds(nextVoted);
+    try {
+      localStorage.setItem('civic_upvoted_complaint_ids', JSON.stringify(nextVoted));
+    } catch (e) {
+      console.warn("Failed to persist upvote:", e);
+    }
+    if (onUpvoteComplaint) {
+      onUpvoteComplaint(complaintId);
+    }
+  };
 
   // Stats computation
   const stats = useMemo(() => {
@@ -66,6 +93,26 @@ export default function TrackView({ complaints, onSelectReport }) {
       return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
     });
   }, [complaints, searchQuery, statusFilter, priorityFilter, categoryFilter]);
+
+  // Sorting & Filtering
+  const sortedComplaints = useMemo(() => {
+    return [...filteredComplaints].sort((a, b) => {
+      if (sortBy === 'most-upvoted') {
+        const votesA = a.upvotes || 0;
+        const votesB = b.upvotes || 0;
+        if (votesB !== votesA) return votesB - votesA;
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      }
+      if (sortBy === 'highest-priority') {
+        const pOrder = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+        const pDiff = (pOrder[b.priority] || 0) - (pOrder[a.priority] || 0);
+        if (pDiff !== 0) return pDiff;
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      }
+      // Default: newest
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
+  }, [filteredComplaints, sortBy]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "Recently";
@@ -207,11 +254,25 @@ export default function TrackView({ complaints, onSelectReport }) {
             </select>
           </div>
 
+          {/* Sort By Filter */}
+          <div className="w-full md:w-48">
+            <select
+              data-testid="sort-by-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white font-medium text-slate-800"
+            >
+              <option value="newest">Newest first</option>
+              <option value="most-upvoted">Most upvoted</option>
+              <option value="highest-priority">Highest priority</option>
+            </select>
+          </div>
+
         </div>
       </div>
 
       {/* COMPLAINTS LIST */}
-      {filteredComplaints.length === 0 ? (
+      {sortedComplaints.length === 0 ? (
         <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
           <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-slate-800">No issues found</h3>
@@ -227,7 +288,7 @@ export default function TrackView({ complaints, onSelectReport }) {
         </div>
       ) : (
         <div className="space-y-5">
-          {filteredComplaints.map((item) => {
+          {sortedComplaints.map((item) => {
             const currentStageIndex = STATUS_STAGES.indexOf(item.status);
 
             return (
@@ -259,9 +320,33 @@ export default function TrackView({ complaints, onSelectReport }) {
                       </span>
                     </div>
 
-                    <div className="flex items-center space-x-1.5 text-xs text-slate-400">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{formatDate(item.createdAt)}</span>
+                    <div className="flex items-center space-x-3">
+                      {/* "Me Too" Upvote Button */}
+                      <button
+                        type="button"
+                        data-testid={`upvote-btn-${item.id}`}
+                        onClick={() => handleUpvote(item.id)}
+                        disabled={upvotedIds.includes(item.id)}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm ${
+                          upvotedIds.includes(item.id)
+                            ? 'bg-sky-100 text-sky-800 border border-sky-300 cursor-default'
+                            : 'bg-white hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-300 hover:border-sky-300 active:scale-95 cursor-pointer'
+                        }`}
+                        title={upvotedIds.includes(item.id) ? "You have already upvoted this complaint" : "Click to upvote this issue (Me Too)"}
+                      >
+                        <ThumbsUp className={`w-3.5 h-3.5 ${upvotedIds.includes(item.id) ? 'text-sky-600 fill-sky-600' : 'text-slate-500'}`} />
+                        <span>{upvotedIds.includes(item.id) ? 'Supported' : 'Me Too'}</span>
+                        <span className={`px-1.5 py-0.2 rounded-full text-[11px] font-extrabold ${
+                          upvotedIds.includes(item.id) ? 'bg-sky-200 text-sky-900' : 'bg-slate-100 text-slate-800'
+                        }`}>
+                          {item.upvotes || 0}
+                        </span>
+                      </button>
+
+                      <div className="flex items-center space-x-1.5 text-xs text-slate-400">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{formatDate(item.createdAt)}</span>
+                      </div>
                     </div>
                   </div>
 

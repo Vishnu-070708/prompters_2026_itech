@@ -63,6 +63,13 @@ export default function App() {
     );
   };
 
+  // Handler for upvoting a complaint
+  const handleUpvoteComplaint = (id) => {
+    setComplaints((prev) =>
+      prev.map((item) => item.id === id ? { ...item, upvotes: (item.upvotes || 0) + 1 } : item)
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
       
@@ -90,6 +97,7 @@ export default function App() {
           <TrackView
             complaints={complaints}
             onSelectReport={() => setCurrentView('report')}
+            onUpvoteComplaint={handleUpvoteComplaint}
           />
         )}
 
