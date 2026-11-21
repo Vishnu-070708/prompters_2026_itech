@@ -3,7 +3,7 @@
 AI-Powered Civic Issue Reporting & Municipal Triage Platform built for the **PromptWars 2026** Hackathon at PSG iTech (in collaboration with GDG on Campus PSG iTech).
 
 ![CivicResolve Platform](https://img.shields.io/badge/Status-Production%20Ready-emerald)
-![AI-Powered](https://img.shields.io/badge/AI-Google%20Gemini%203.8%20Flash-indigo)
+![AI-Powered](https://img.shields.io/badge/AI-Google%20Gemini%20Flash--Lite-indigo)
 ![Built-with](https://img.shields.io/badge/Built%20with-Google%20Antigravity-sky)
 ![Single Branch](https://img.shields.io/badge/Branch-main%20only-blue)
 
@@ -36,9 +36,9 @@ In urban municipalities and smart cities, citizen grievance redressal is severel
   - Generated Tracking ID (e.g., `CR-1042`) with 1-click clipboard copy.
 
 - **Resilient AI Execution & Graceful Fallback**:
-  - Connects to Google Gemini API via official `@google/genai` SDK using `VITE_GEMINI_API_KEY` and `VITE_GEMINI_MODEL` (`gemini-3.8-flash`).
+  - Connects to Google Gemini API via official `@google/genai` SDK using `VITE_GEMINI_API_KEY` and `VITE_GEMINI_MODEL` (`gemini-flash-lite-latest`).
   - **Zero-Crash Heuristic Mock Engine**: If no API key is configured or network quota limits are hit, the system seamlessly activates an embedded keyword-based municipal classifier.
-  - UI visual badges distinguish `Gemini 3.8 Active` vs. `Mock AI mode`.
+  - UI visual badges distinguish `Gemini Active` vs. `Mock AI mode`.
 
 - **Public Tracking & Filter Dashboard**:
   - Real-time KPI counters (`Total Filed`, `Reported`, `In Progress`, `Resolved`).
@@ -60,7 +60,7 @@ In urban municipalities and smart cities, citizen grievance redressal is severel
 
 - **Frontend Core**: React 18, Vite 6, JavaScript (ES Modules)
 - **Styling & Design System**: Tailwind CSS, Lucide React Icon Suite
-- **Generative AI & LLM**: Google Gemini (`gemini-3.8-flash`) via the official `@google/genai` SDK
+- **Generative AI & LLM**: Google Gemini (`gemini-flash-lite-latest`) via the official `@google/genai` SDK
 - **Data Persistence**: Browser `localStorage` (100% serverless, zero external database setup needed)
 - **Deployment & Architecture**: Pure client-side SPA, lightweight repository footprint (< 5 MB)
 
@@ -99,7 +99,7 @@ cp .env.example .env
 Edit `.env` and add your Gemini API Key:
 \`\`\`env
 VITE_GEMINI_API_KEY=your_gemini_api_key_here
-VITE_GEMINI_MODEL=gemini-3.8-flash
+VITE_GEMINI_MODEL=gemini-flash-lite-latest
 \`\`\`
 *(Alternatively, you can just start the app and paste your API key into the Settings modal via the gear icon in the top navigation bar!)*
 

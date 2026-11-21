@@ -4,13 +4,13 @@ import { MODEL_FALLBACK_LIST } from '../services/geminiService';
 
 export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, modelName, setModelName, lastAnsweredModel }) {
   const [inputKey, setInputKey] = useState(apiKey || '');
-  const [selectedModel, setSelectedModel] = useState(modelName || 'gemini-3.8-flash');
+  const [selectedModel, setSelectedModel] = useState(modelName || 'gemini-flash-lite-latest');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [activeAnsweringModel, setActiveAnsweringModel] = useState(lastAnsweredModel || '');
 
   useEffect(() => {
     setInputKey(apiKey || '');
-    setSelectedModel(modelName || 'gemini-3.8-flash');
+    setSelectedModel(modelName || 'gemini-flash-lite-latest');
     const cached = localStorage.getItem('civic_last_answered_model') || lastAnsweredModel || 'None yet';
     setActiveAnsweringModel(cached);
   }, [apiKey, modelName, isOpen, lastAnsweredModel]);
@@ -94,8 +94,9 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
               onChange={(e) => setSelectedModel(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm text-slate-800 bg-white shadow-sm"
             >
-              <option value="gemini-3.8-flash">gemini-3.8-flash (Primary default)</option>
-              <option value="gemini-flash-lite-latest">gemini-flash-lite-latest (Ultra-fast Flash-Lite)</option>
+              <option value="gemini-flash-lite-latest">gemini-flash-lite-latest (Default - Ultra-fast)</option>
+              <option value="gemini-3.8-flash">gemini-3.8-flash (Advanced reasoning)</option>
+              <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Flash-Lite)</option>
               <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Stable Flash-Lite)</option>
             </select>
           </div>

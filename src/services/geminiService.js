@@ -6,8 +6,8 @@ import { GoogleGenAI } from '@google/genai';
  * (or session-cached working model) first, then falls back through this list.
  */
 export const MODEL_FALLBACK_LIST = [
-  "gemini-3.8-flash",
   "gemini-flash-lite-latest",
+  "gemini-3.8-flash",
   "gemini-3.1-flash-lite",
   "gemini-3.5-flash-lite"
 ];
@@ -196,7 +196,7 @@ async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, i
   };
 
   // Only pass thinking_config to models that support reasoning (e.g. 3.8-flash)
-  if (model.includes("3.8") || model.includes("2.5-flash")) {
+  if (model.includes("3.8")) {
     generationConfig.thinking_config = {
       thinking_budget: 0
     };
@@ -264,10 +264,10 @@ async function callWithRetry({ apiKey, model, systemPrompt, userPrompt, imageBas
  */
 export async function triageIssueWithGemini({ title, description, location, selectedCategory, imageBase64, apiKey, modelName }) {
   const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
-  const envModel = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_MODEL) || 'gemini-3.8-flash';
+  const envModel = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_MODEL) || 'gemini-flash-lite-latest';
 
   const key = apiKey || envKey;
-  const configuredModel = modelName || envModel || "gemini-3.8-flash";
+  const configuredModel = modelName || envModel || "gemini-flash-lite-latest";
 
   // If no API key is provided, use fallback mock immediately
   if (!key || key.trim() === "") {
