@@ -2,6 +2,8 @@
 
 AI-Powered Civic Issue Reporting & Municipal Triage Platform built for the **PromptWars 2026** Hackathon at PSG iTech (in collaboration with GDG on Campus PSG iTech).
 
+**Live Demo:** https://prompters-2026-itech-7ohs.vercel.app
+
 ![CivicResolve Platform](https://img.shields.io/badge/Status-Prototype-amber)
 ![AI-Powered](https://img.shields.io/badge/AI-Google%20Gemini%20Flash--Lite-indigo)
 ![Built-with](https://img.shields.io/badge/Built%20with-Google%20Antigravity-sky)
@@ -53,7 +55,7 @@ In urban municipalities and smart cities, citizen grievance redressal is severel
 
 - **Resilient AI Execution & Multi-Model Graceful Fallback**:
   - Connects to Google Gemini API via official `@google/genai` SDK using `VITE_GEMINI_API_KEY` and `VITE_GEMINI_MODEL` (`gemini-flash-lite-latest`).
-  - **Zero-Crash Heuristic Mock Engine**: If no API key is configured or network quota limits are hit, the system seamlessly activates an embedded keyword-based municipal classifier that also provides severity scores, resolution times, and vision fallback.
+  - **Zero-Crash Heuristic Mock Engine**: If no API key is configured, text triage runs in Mock AI mode with keyword-based classification, severity scores, and resolution times. When an API key is configured, Gemini Vision actively verifies uploaded photos; a failed or non-civic photo analysis returns a clear rejection and no longer falls back to a mock issue.
   - 15s timeout with automatic retry on 503 / timeout.
   - UI visual badges distinguish `Gemini Active` vs. `Mock AI mode`.
 
@@ -181,5 +183,5 @@ Google Antigravity was guided with short iterative prompts covering:
 ## ⚠️ Known Limitations
 
 - Location requires device permission and a usable location source; IP fallback is approximate and should be refined by the citizen.
-- Gemini free-tier limits, invalid keys, or network failures switch the demo to rule-based Mock AI mode.
+- Gemini free-tier limits, invalid keys, or network failures switch complaint triage to rule-based Mock AI mode. Photo verification reports an error directly without defaulting to a mock issue.
 - This prototype stores the Gemini key in client-side configuration (`VITE_` variables are visible in the browser). A production deployment must use a backend proxy and authenticated server-side key storage.
