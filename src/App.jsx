@@ -129,6 +129,7 @@ export default function App() {
             onViewTrack={() => setCurrentView('track')}
             apiKey={apiKey}
             modelName={modelName}
+            existingComplaintIds={complaints.map((complaint) => complaint.id)}
           />
         )}
 

@@ -17,6 +17,7 @@ import {
   Info
 } from 'lucide-react';
 import { triageIssueWithGemini, analyzePhotoWithGemini } from '../services/geminiService';
+import { generateTrackingId } from '../utils/trackingId';
 
 const CATEGORIES = [
   "Auto-detect with AI",
@@ -28,7 +29,7 @@ const CATEGORIES = [
   "Other"
 ];
 
-export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, modelName }) {
+export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, modelName, existingComplaintIds }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
@@ -199,7 +200,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         modelName
       });
 
-      const trackingId = `CR-${Math.floor(1000 + Math.random() * 9000)}`;
+      const trackingId = generateTrackingId(existingComplaintIds);
 
       const newComplaint = {
         id: trackingId,

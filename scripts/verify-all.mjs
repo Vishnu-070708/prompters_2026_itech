@@ -135,6 +135,21 @@ async function runVerification() {
     record('3. Me Too Upvote & Most Upvoted Sort', false, e.message);
   }
 
+  // Test 3A: tracking IDs skip IDs already present in memory or localStorage.
+  try {
+    const { generateTrackingId } = await import('../src/utils/trackingId.js');
+    const generatedId = generateTrackingId(['CR-1000'], () => 0);
+    const collisionIsAvoided = generatedId === 'CR-1001';
+
+    if (collisionIsAvoided) {
+      record('3A. Unique Tracking ID Generation', true, `Existing CR-1000 was skipped and ${generatedId} was generated`);
+    } else {
+      record('3A. Unique Tracking ID Generation', false, `Expected CR-1001 after collision, received ${generatedId}`);
+    }
+  } catch (e) {
+    record('3A. Unique Tracking ID Generation', false, e.message);
+  }
+
   // Test 4: Admin AI Daily Dispatch Summary
   try {
     const { mockDailyDispatchSummary, generateDailyDispatchSummary } = await import('../src/services/geminiService.js');
