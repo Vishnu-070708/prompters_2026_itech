@@ -17,7 +17,9 @@ import {
   Loader2,
   Copy,
   X,
-  ExternalLink
+  ExternalLink,
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 import { generateDailyDispatchSummary } from '../services/geminiService';
 
@@ -33,7 +35,7 @@ const DEPARTMENTS = [
 const PRIORITIES = ["Low", "Medium", "High", "Critical"];
 const STATUSES = ["Reported", "In Progress", "Resolved"];
 
-export default function AdminView({ complaints, onUpdateComplaint, apiKey, modelName }) {
+export default function AdminView({ complaints, onUpdateComplaint, onDeleteComplaint, onResetDemoData, apiKey, modelName }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [authError, setAuthError] = useState('');
@@ -127,6 +129,20 @@ export default function AdminView({ complaints, onUpdateComplaint, apiKey, model
     }, 2000);
   };
 
+  const handleDeleteComplaint = (item) => {
+    if (!window.confirm(`Delete ${item.id} permanently? This cannot be undone.`)) return;
+    if (!onDeleteComplaint(item.id)) {
+      window.alert('Could not delete this complaint because browser storage is unavailable.');
+    }
+  };
+
+  const handleResetDemoData = () => {
+    if (!window.confirm('Reset all complaints to the six seeded demo records? All locally added reports, edits, and upvotes will be removed.')) return;
+    if (!onResetDemoData()) {
+      window.alert('Could not reset demo data because browser storage is unavailable.');
+    }
+  };
+
   // Filter complaints
   const filtered = useMemo(() => {
     return complaints.filter(c => {
@@ -203,7 +219,7 @@ export default function AdminView({ complaints, onUpdateComplaint, apiKey, model
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-white">
               Official Admin
             </span>
@@ -442,6 +458,18 @@ export default function AdminView({ complaints, onUpdateComplaint, apiKey, model
               <option value="All">All Statuses</option>
               {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
+
+            <div className="pl-2 ml-1 border-l border-rose-200">
+              <button
+                type="button"
+                onClick={handleResetDemoData}
+                className="px-3 py-1.5 rounded-lg border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-bold flex items-center space-x-1.5 transition-colors"
+                title="Restore the six seeded demo complaints"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Demo Data</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -476,6 +504,15 @@ export default function AdminView({ complaints, onUpdateComplaint, apiKey, model
                       <span>Open in Maps</span>
                     </a>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteComplaint(item)}
+                    className="inline-flex items-center space-x-1 text-xs font-bold text-rose-700 hover:text-rose-900 hover:underline ml-1"
+                    data-testid={`delete-complaint-${item.id}`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
                 </div>
               </div>
 

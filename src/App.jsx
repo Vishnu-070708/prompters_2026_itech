@@ -118,6 +118,35 @@ export default function App() {
     );
   };
 
+  const handleDeleteComplaint = (id) => {
+    const nextComplaints = complaints.filter((item) => item.id !== id);
+    try {
+      localStorage.setItem('civic_complaints_data', JSON.stringify(nextComplaints));
+    } catch (err) {
+      console.warn('Failed to delete complaint from localStorage:', err);
+      return false;
+    }
+    setComplaints(nextComplaints);
+    return true;
+  };
+
+  const handleResetDemoData = () => {
+    const resetComplaints = INITIAL_COMPLAINTS.map((item) => ({
+      ...item,
+      coordinates: item.coordinates ? { ...item.coordinates } : null,
+      statusHistory: item.statusHistory?.map((entry) => ({ ...entry })) || []
+    }));
+    try {
+      localStorage.setItem('civic_complaints_data', JSON.stringify(resetComplaints));
+      localStorage.removeItem('civic_upvoted_complaint_ids');
+    } catch (err) {
+      console.warn('Failed to reset demo data in localStorage:', err);
+      return false;
+    }
+    setComplaints(resetComplaints);
+    return true;
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
       
@@ -156,6 +185,8 @@ export default function App() {
             onUpdateComplaint={handleUpdateComplaint}
             apiKey={apiKey}
             modelName={modelName}
+            onDeleteComplaint={handleDeleteComplaint}
+            onResetDemoData={handleResetDemoData}
           />
         )}
       </main>

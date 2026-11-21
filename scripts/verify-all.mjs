@@ -193,6 +193,20 @@ async function runVerification() {
     record('4. Admin AI Daily Dispatch Summary', false, e.message);
   }
 
+  // Test 4A: Admin can remove a test report or restore the seeded demo records.
+  try {
+    const adminCode = fs.readFileSync(path.join(ROOT, 'src/components/AdminView.jsx'), 'utf-8');
+    const appCode = fs.readFileSync(path.join(ROOT, 'src/App.jsx'), 'utf-8');
+    const hasConfirmedDelete = adminCode.includes('permanently? This cannot be undone.') && adminCode.includes('onDeleteComplaint');
+    const hasConfirmedReset = adminCode.includes('Reset all complaints to the six seeded demo records?') && adminCode.includes('onResetDemoData');
+    const restoresSeeds = appCode.includes('const resetComplaints = INITIAL_COMPLAINTS.map') && appCode.includes("removeItem('civic_upvoted_complaint_ids')");
+
+    record('4A. Admin Delete & Reset Demo Data', hasConfirmedDelete && hasConfirmedReset && restoresSeeds,
+      `confirmed delete: ${hasConfirmedDelete}, confirmed reset: ${hasConfirmedReset}, restores seeds: ${restoresSeeds}`);
+  } catch (e) {
+    record('4A. Admin Delete & Reset Demo Data', false, e.message);
+  }
+
   // Test 5: Timestamps for status changes & admin notes in progress tracker
   try {
     const trackViewCode = fs.readFileSync(path.join(ROOT, 'src/components/TrackView.jsx'), 'utf-8');
