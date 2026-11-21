@@ -272,6 +272,21 @@ async function runVerification() {
     record('6. Strict Hackathon Rules Adherence', false, e.message);
   }
 
+  // Test 6A: README renders setup blocks and documents licensing, prompts, and limitations.
+  try {
+    const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf-8');
+    const license = fs.readFileSync(path.join(ROOT, 'LICENSE'), 'utf-8');
+    const properCodeFences = !readme.includes('\\`\\`\\`') && readme.includes('```bash');
+    const documentsPrompts = readme.includes('## 🧩 Prompts Used');
+    const documentsLimitations = readme.includes('## ⚠️ Known Limitations');
+    const hasMitLicense = license.startsWith('MIT License');
+
+    record('6A. README & MIT License', properCodeFences && documentsPrompts && documentsLimitations && hasMitLicense,
+      `Markdown fences: ${properCodeFences}, prompts: ${documentsPrompts}, limitations: ${documentsLimitations}, MIT license: ${hasMitLicense}`);
+  } catch (e) {
+    record('6A. README & MIT License', false, e.message);
+  }
+
   // Test 7: Real Geolocation with Nominatim, ipwho.is IP Fallback & Open in Maps
   try {
     const reportCode = fs.readFileSync(path.join(ROOT, 'src/components/ReportView.jsx'), 'utf-8');

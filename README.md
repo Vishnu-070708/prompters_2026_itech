@@ -91,31 +91,31 @@ Follow these 3 simple steps to run CivicResolve locally:
 - npm (v9.0.0 or higher)
 
 ### 1. Clone & Install Dependencies
-\`\`\`bash
+```bash
 git clone https://github.com/Vishnu-070708/prompters_2026_itech.git
 cd prompters_2026_itech
 npm install
-\`\`\`
+```
 
 ### 2. Configure Environment (Optional)
 CivicResolve comes with a zero-setup Mock AI mode out of the box. To enable live Gemini AI:
-\`\`\`bash
+```bash
 cp .env.example .env
-\`\`\`
+```
 Edit `.env` and add your Gemini API Key:
-\`\`\`env
+```env
 VITE_GEMINI_API_KEY=your_gemini_api_key_here
 VITE_GEMINI_MODEL=gemini-flash-lite-latest
-\`\`\`
+```
 *(Alternatively, you can just start the app and paste your API key into the Settings modal via the gear icon in the top navigation bar!)*
 
 > [!NOTE] **API Key Security Note for Hackathon Evaluators / Judges**
 > Environment variables prefixed with `VITE_` are bundled directly into client-side browser code at build and runtime. This design is standard and intentional for a client-side hackathon prototype and zero-backend demo (allowing judges to easily evaluate the app or test their own key via the in-browser Settings modal). In a production environment, API requests would be routed through an authenticated backend proxy or serverless function to keep API keys secure and off the client.
 
 ### 3. Start Development Server
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 Open your browser at `http://localhost:5173`.
 
 ---
@@ -149,3 +149,20 @@ Open your browser at `http://localhost:5173`.
 
 ## 📄 License
 Open source under the MIT License. Developed for PromptWars 2026.
+
+---
+
+## 🧩 Prompts Used
+
+Google Antigravity was guided with short iterative prompts covering:
+
+1. **Initial build:** Create a React/Vite CivicResolve prototype with citizen reporting, AI triage, public tracking, and an admin dashboard.
+2. **Feature upgrade:** Add severity scoring, estimated resolution times, progress timestamps, community upvotes, and a daily dispatch summary.
+3. **Location refinement:** Use browser geolocation, OpenStreetMap reverse geocoding, and a clearly labelled approximate IP fallback without inserting a default address.
+4. **Reliability pass:** Add Gemini timeouts, retry/fallback behavior, Mock AI mode, and resilient handling when a key or network is unavailable.
+
+## ⚠️ Known Limitations
+
+- Location requires device permission and a usable location source; IP fallback is approximate and should be refined by the citizen.
+- Gemini free-tier limits, invalid keys, or network failures switch the demo to rule-based Mock AI mode.
+- This prototype stores the Gemini key in client-side configuration (`VITE_` variables are visible in the browser). A production deployment must use a backend proxy and authenticated server-side key storage.
