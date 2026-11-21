@@ -14,15 +14,15 @@ import {
   FileCheck2,
   ThumbsUp,
   ArrowUpDown,
-  ExternalLink
+  ExternalLink, Activity
 } from 'lucide-react';
 
 const STATUS_STAGES = ["Reported", "In Progress", "Resolved"];
 
 const PRIORITY_STYLES = {
-  Critical: "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
-  High: "bg-amber-100 text-amber-800 border-amber-300 font-bold",
-  Medium: "bg-yellow-100 text-yellow-800 border-yellow-300 font-semibold",
+  Critical: "bg-red-50 text-red-800 border-red-200 font-extrabold",
+  High: "bg-orange-50 text-orange-800 border-orange-200 font-bold",
+  Medium: "bg-amber-50 text-amber-800 border-amber-200 font-semibold",
   Low: "bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold"
 };
 
@@ -176,21 +176,22 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-7">
       
       {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-accent-50 px-3 py-1 text-xs font-bold text-accent-700"><Activity className="h-3.5 w-3.5" /> Live civic pulse</div>
+          <h1 className="mt-3 text-3xl font-extrabold text-brand-950 tracking-tight sm:text-4xl">
             Public Civic Tracker
           </h1>
-          <p className="text-slate-600 text-sm mt-1">
+          <p className="text-slate-600 text-sm mt-2 max-w-2xl">
             Real-time transparency on complaints, municipal department actions, and resolution workflows.
           </p>
         </div>
         <button
           onClick={onSelectReport}
-          className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm shadow-md transition-colors"
+          className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-800 to-accent-600 hover:from-brand-900 hover:to-accent-700 text-white font-semibold text-sm shadow-md shadow-brand-900/15 transition-all hover:-translate-y-0.5"
         >
           + Report New Issue
         </button>
@@ -244,7 +245,8 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
       </div>
 
       {/* SEARCH & FILTERS BAR */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-surface-200 shadow-sm space-y-4">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-800"><Filter className="h-3.5 w-3.5 text-accent-600" /> Find an issue</div>
         <div className="flex flex-col md:flex-row gap-3">
           
           {/* Search Box */}
@@ -341,14 +343,14 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
             return (
               <div 
                 key={item.id}
-                className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                className={`bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all overflow-hidden border-l-4 ${item.priority === 'Critical' ? 'border-l-red-500' : item.priority === 'High' ? 'border-l-orange-500' : item.priority === 'Medium' ? 'border-l-amber-500' : 'border-l-emerald-500'}`}
               >
                 <div className="p-5 sm:p-6 space-y-4">
                   
                   {/* Card Header: Tracking ID + Badges + Date */}
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono font-extrabold text-base text-sky-700 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200">
+                      <span className="font-mono font-extrabold text-base text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg border border-brand-100">
                         {item.id}
                       </span>
                       <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
@@ -446,10 +448,10 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
 
                       {/* AI Reasoning Pill */}
                       {item.aiReasoning && (
-                        <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-100 text-xs text-slate-700 flex items-start space-x-2">
-                          <Sparkles className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
+                        <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-brand-50 to-accent-50/40 border border-brand-100 text-xs text-slate-700 flex items-start space-x-2">
+                          <Sparkles className="w-4 h-4 text-accent-600 flex-shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold text-sky-900">AI Assessment: </span>
+                            <span className="font-semibold text-brand-900">AI Assessment: </span>
                             <span>{item.aiReasoning}</span>
                           </div>
                         </div>
