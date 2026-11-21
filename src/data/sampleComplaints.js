@@ -16,7 +16,11 @@ export const INITIAL_COMPLAINTS = [
     createdAt: "2026-11-20T09:30:00Z",
     adminNotes: "Site inspection done by PWD Assistant Engineer. Road patch contractor scheduled for asphalt filling tonight.",
     aiMode: "Live Gemini AI",
-    upvotes: 14
+    upvotes: 14,
+    statusHistory: [
+      { status: "Reported", timestamp: "2026-11-20T09:30:00Z", note: "Complaint lodged by commuter." },
+      { status: "In Progress", timestamp: "2026-11-20T14:00:00Z", note: "Site inspection done by PWD Assistant Engineer. Road patch contractor scheduled for asphalt filling tonight." }
+    ]
   },
   {
     id: "CR-1043",
@@ -34,7 +38,10 @@ export const INITIAL_COMPLAINTS = [
     createdAt: "2026-11-20T14:15:00Z",
     adminNotes: "",
     aiMode: "Live Gemini AI",
-    upvotes: 8
+    upvotes: 8,
+    statusHistory: [
+      { status: "Reported", timestamp: "2026-11-20T14:15:00Z", note: "Waste dump report received and queued for sanitation dispatch." }
+    ]
   },
   {
     id: "CR-1044",
@@ -52,7 +59,10 @@ export const INITIAL_COMPLAINTS = [
     createdAt: "2026-11-19T18:40:00Z",
     adminNotes: "",
     aiMode: "Live Gemini AI",
-    upvotes: 5
+    upvotes: 5,
+    statusHistory: [
+      { status: "Reported", timestamp: "2026-11-19T18:40:00Z", note: "Streetlight outage docket opened for Electricity Board." }
+    ]
   },
   {
     id: "CR-1045",
@@ -70,7 +80,11 @@ export const INITIAL_COMPLAINTS = [
     createdAt: "2026-11-20T06:10:00Z",
     adminNotes: "Emergency valve isolated at 07:30. Water Board repair team on site replacing pipe collar.",
     aiMode: "Live Gemini AI",
-    upvotes: 27
+    upvotes: 27,
+    statusHistory: [
+      { status: "Reported", timestamp: "2026-11-20T06:10:00Z", note: "High-pressure pipeline burst alert received." },
+      { status: "In Progress", timestamp: "2026-11-20T07:30:00Z", note: "Emergency valve isolated at 07:30. Water Board repair team on site replacing pipe collar." }
+    ]
   },
   {
     id: "CR-1046",
@@ -88,7 +102,12 @@ export const INITIAL_COMPLAINTS = [
     createdAt: "2026-11-18T16:20:00Z",
     adminNotes: "TANGEDCO line turned off safely while Fire & Rescue team trimmed and cleared the suspended branch. Line restored.",
     aiMode: "Live Gemini AI",
-    upvotes: 19
+    upvotes: 19,
+    statusHistory: [
+      { status: "Reported", timestamp: "2026-11-18T16:20:00Z", note: "Critical safety hazard reported." },
+      { status: "In Progress", timestamp: "2026-11-18T17:10:00Z", note: "Linemen arrived and safely de-energized 440V overhead lines." },
+      { status: "Resolved", timestamp: "2026-11-18T18:45:00Z", note: "TANGEDCO line turned off safely while Fire & Rescue team trimmed and cleared the suspended branch. Line restored." }
+    ]
   },
   {
     id: "CR-1047",
@@ -106,6 +125,11 @@ export const INITIAL_COMPLAINTS = [
     createdAt: "2026-11-17T11:00:00Z",
     adminNotes: "Temporary barricade placed immediately, followed by installation of reinforced concrete slab cover.",
     aiMode: "Live Gemini AI",
-    upvotes: 12
+    upvotes: 12,
+    statusHistory: [
+      { status: "Reported", timestamp: "2026-11-17T11:00:00Z", note: "Trench collapse flagged near school entrance." },
+      { status: "In Progress", timestamp: "2026-11-17T13:30:00Z", note: "Temporary warning barricade placed immediately around the trench." },
+      { status: "Resolved", timestamp: "2026-11-17T16:00:00Z", note: "Temporary barricade placed immediately, followed by installation of reinforced concrete slab cover." }
+    ]
   }
 ];

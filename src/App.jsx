@@ -59,7 +59,46 @@ export default function App() {
   // Handler for admin updating a complaint
   const handleUpdateComplaint = (id, updates) => {
     setComplaints((prev) => 
-      prev.map((item) => item.id === id ? { ...item, ...updates } : item)
+      prev.map((item) => {
+        if (item.id !== id) return item;
+
+        let statusHistory = Array.isArray(item.statusHistory) ? [...item.statusHistory] : [
+          { status: "Reported", timestamp: item.createdAt || new Date().toISOString(), note: "Reported" }
+        ];
+
+        const now = new Date().toISOString();
+
+        if (updates.status && updates.status !== item.status) {
+          const noteForNewStatus = updates.adminNotes !== undefined ? updates.adminNotes : (item.adminNotes || '');
+          const existingIdx = statusHistory.findIndex(h => h.status === updates.status);
+          const newEntry = {
+            status: updates.status,
+            timestamp: now,
+            note: noteForNewStatus
+          };
+          if (existingIdx >= 0) {
+            statusHistory[existingIdx] = newEntry;
+          } else {
+            statusHistory.push(newEntry);
+          }
+        } else if (updates.adminNotes !== undefined) {
+          const currentIdx = statusHistory.findIndex(h => h.status === item.status);
+          if (currentIdx >= 0) {
+            statusHistory[currentIdx] = {
+              ...statusHistory[currentIdx],
+              note: updates.adminNotes
+            };
+          } else {
+            statusHistory.push({
+              status: item.status,
+              timestamp: now,
+              note: updates.adminNotes
+            });
+          }
+        }
+
+        return { ...item, ...updates, statusHistory };
+      })
     );
   };
 

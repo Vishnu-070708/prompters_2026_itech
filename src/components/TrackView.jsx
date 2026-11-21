@@ -128,6 +128,52 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
     }
   };
 
+  const formatStageDateTime = (dateStr) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-IN', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const getStageInfo = (item, stage) => {
+    if (Array.isArray(item.statusHistory)) {
+      const entry = item.statusHistory.find(h => h.status === stage);
+      if (entry) {
+        return {
+          timestamp: entry.timestamp,
+          note: entry.note || (item.status === stage ? item.adminNotes : '')
+        };
+      }
+    }
+    if (stage === "Reported") {
+      return {
+        timestamp: item.createdAt,
+        note: (item.status === "Reported" && item.adminNotes) ? item.adminNotes : ""
+      };
+    }
+    if (stage === "In Progress" && (item.status === "In Progress" || item.status === "Resolved")) {
+      return {
+        timestamp: item.inProgressAt || item.createdAt,
+        note: item.status === "In Progress" ? item.adminNotes : ""
+      };
+    }
+    if (stage === "Resolved" && item.status === "Resolved") {
+      return {
+        timestamp: item.resolvedAt || item.createdAt,
+        note: item.adminNotes || ""
+      };
+    }
+    return { timestamp: null, note: null };
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
@@ -409,49 +455,79 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
                     </div>
                   </div>
 
-                  {/* 3-STEP PROGRESS TRACKER */}
-                  <div className="pt-3 border-t border-slate-100">
-                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                      Resolution Progress
+                  {/* 3-STEP PROGRESS TRACKER WITH TIMESTAMPS & ADMIN NOTES */}
+                  <div className="pt-4 border-t border-slate-100">
+                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
+                      Resolution Progress & Timestamps
                     </div>
-                    <div className="flex items-center justify-between relative max-w-xl mx-auto">
+                    <div className="relative max-w-2xl mx-auto">
                       
                       {/* Background Bar */}
-                      <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 -translate-y-1/2 z-0"></div>
+                      <div className="absolute top-4 left-10 right-10 h-1 bg-slate-200 -translate-y-1/2 z-0"></div>
                       
                       {/* Active Progress Bar */}
                       <div 
-                        className="absolute top-1/2 left-0 h-1 bg-sky-600 -translate-y-1/2 z-0 transition-all duration-500"
+                        className="absolute top-4 left-10 h-1 bg-sky-600 -translate-y-1/2 z-0 transition-all duration-500"
                         style={{
-                          width: currentStageIndex === 0 ? '0%' : currentStageIndex === 1 ? '50%' : '100%'
+                          width: currentStageIndex === 0 ? '0%' : currentStageIndex === 1 ? '50%' : 'calc(100% - 5rem)'
                         }}
                       ></div>
 
-                      {STATUS_STAGES.map((stage, idx) => {
-                        const isCompleted = idx <= currentStageIndex;
-                        const isCurrent = idx === currentStageIndex;
+                      <div className="flex items-start justify-between relative z-10">
+                        {STATUS_STAGES.map((stage, idx) => {
+                          const isCompleted = idx <= currentStageIndex;
+                          const isCurrent = idx === currentStageIndex;
+                          const stageInfo = getStageInfo(item, stage);
 
-                        return (
-                          <div key={stage} className="relative z-10 flex flex-col items-center">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                              isCompleted 
-                                ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30' 
-                                : 'bg-white border-2 border-slate-300 text-slate-400'
-                            } ${isCurrent ? 'ring-4 ring-sky-100' : ''}`}>
-                              {isCompleted ? (
-                                <CheckCircle2 className="w-5 h-5" />
+                          return (
+                            <div key={stage} className="flex flex-col items-center flex-1 px-1 text-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+                                isCompleted 
+                                  ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30' 
+                                  : 'bg-white border-2 border-slate-300 text-slate-400'
+                              } ${isCurrent ? 'ring-4 ring-sky-100' : ''}`}>
+                                {isCompleted ? (
+                                  <CheckCircle2 className="w-5 h-5" />
+                                ) : (
+                                  <span>{idx + 1}</span>
+                                )}
+                              </div>
+
+                              <span className={`text-xs mt-1.5 font-semibold ${
+                                isCurrent ? 'text-sky-700 font-bold' : isCompleted ? 'text-slate-800' : 'text-slate-400'
+                              }`}>
+                                {stage}
+                              </span>
+
+                              {/* Timestamp for each status change */}
+                              {stageInfo.timestamp ? (
+                                <span 
+                                  data-testid={`tracker-time-${item.id}-${stage.toLowerCase().replace(/\s+/g, '-')}`}
+                                  className="text-[10px] text-slate-500 font-medium flex items-center justify-center space-x-1 mt-0.5"
+                                >
+                                  <Clock className="w-2.5 h-2.5 text-slate-400 flex-shrink-0" />
+                                  <span>{formatStageDateTime(stageInfo.timestamp)}</span>
+                                </span>
                               ) : (
-                                <span>{idx + 1}</span>
+                                <span className="text-[10px] text-slate-400 mt-0.5 italic">Pending</span>
+                              )}
+
+                              {/* Admin note associated with this status */}
+                              {stageInfo.note && (
+                                <div 
+                                  data-testid={`tracker-note-${item.id}-${stage.toLowerCase().replace(/\s+/g, '-')}`}
+                                  className="mt-2 p-1.5 rounded-lg bg-amber-50/90 border border-amber-200/90 text-[10px] text-amber-900 leading-tight max-w-[190px] shadow-xs text-left"
+                                >
+                                  <span className="font-bold text-[9px] uppercase tracking-wider text-amber-950 block mb-0.5">
+                                    Admin Note:
+                                  </span>
+                                  <span>{stageInfo.note}</span>
+                                </div>
                               )}
                             </div>
-                            <span className={`text-xs mt-1.5 font-semibold ${
-                              isCurrent ? 'text-sky-700 font-bold' : isCompleted ? 'text-slate-800' : 'text-slate-400'
-                            }`}>
-                              {stage}
-                            </span>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
 
                     </div>
                   </div>

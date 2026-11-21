@@ -159,7 +159,14 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         createdAt: new Date().toISOString(),
         adminNotes: "",
         aiMode: triage.aiMode || (triage.isMock ? "Mock AI mode" : "Gemini Flash-Lite"),
-        upvotes: 0
+        upvotes: 0,
+        statusHistory: [
+          {
+            status: "Reported",
+            timestamp: new Date().toISOString(),
+            note: "Complaint submitted and automatically triaged by CivicResolve AI."
+          }
+        ]
       };
 
       onComplaintAdded(newComplaint);
