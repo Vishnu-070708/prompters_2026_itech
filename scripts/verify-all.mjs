@@ -76,16 +76,20 @@ async function runVerification() {
     record('1. Severity Score & Resolution Time', false, e.message);
   }
 
-  // Test 2: Snap-to-Fill with Gemini Vision
+  // Test 2: Snap-to-Fill with Gemini Vision (Resident Voice)
   try {
     const { mockAnalyzePhoto, analyzePhotoWithGemini } = await import('../src/services/geminiService.js');
     const mockResult = mockAnalyzePhoto('Test Heuristic');
 
-    const mockVisionOk = typeof mockResult.title === 'string' && 
-                         typeof mockResult.description === 'string' && 
-                         typeof mockResult.category === 'string' &&
-                         mockResult.title.length > 0 &&
-                         mockResult.description.length > 0;
+    const titleWordCount = mockResult.title.trim().split(/\s+/).length;
+    const titleLengthOk = titleWordCount <= 8;
+    const forbiddenPatterns = /visual analysis|uploaded photo|the image shows|the photo shows|reveals|\bAI\b/i;
+    const noForbiddenInMock = !forbiddenPatterns.test(mockResult.description) && !forbiddenPatterns.test(mockResult.title);
+
+    const geminiServiceCode = fs.readFileSync(path.join(ROOT, 'src/services/geminiService.js'), 'utf-8');
+    const promptHasRules = geminiServiceCode.includes('maximum 8 words') && 
+                           geminiServiceCode.includes('1-2 simple sentences') &&
+                           geminiServiceCode.includes('visual analysis');
 
     const reportViewCode = fs.readFileSync(path.join(ROOT, 'src/components/ReportView.jsx'), 'utf-8');
     const hasAnalyzeBtn = reportViewCode.includes('Analyze photo with AI') && reportViewCode.includes('handleAnalyzePhoto');
@@ -93,15 +97,15 @@ async function runVerification() {
                           reportViewCode.includes('setDescription(result.description)') && 
                           reportViewCode.includes('setCategory(result.category)');
 
-    if (mockVisionOk && hasAnalyzeBtn && allowsEditing && typeof analyzePhotoWithGemini === 'function') {
-      record('2. Snap-to-Fill (Gemini Vision)', true, 
-        `Vision analysis exports analyzePhotoWithGemini and mockAnalyzePhoto; Button triggers form fill with editable inputs`);
+    if (titleLengthOk && noForbiddenInMock && promptHasRules && hasAnalyzeBtn && allowsEditing && typeof analyzePhotoWithGemini === 'function') {
+      record('2. Snap-to-Fill (Resident Style & Prompt Rules)', true, 
+        `Mock title is ${titleWordCount} words ("${mockResult.title}"), description is plain resident voice with 0 forbidden AI phrases; Gemini prompt enforces resident style rules`);
     } else {
-      record('2. Snap-to-Fill (Gemini Vision)', false, 
-        `mockVision: ${mockVisionOk}, hasBtn: ${hasAnalyzeBtn}, allowsEditing: ${allowsEditing}`);
+      record('2. Snap-to-Fill (Resident Style & Prompt Rules)', false, 
+        `titleWords: ${titleWordCount} (ok: ${titleLengthOk}), noForbidden: ${noForbiddenInMock}, promptRules: ${promptHasRules}, btn: ${hasAnalyzeBtn}`);
     }
   } catch (e) {
-    record('2. Snap-to-Fill (Gemini Vision)', false, e.message);
+    record('2. Snap-to-Fill (Resident Style & Prompt Rules)', false, e.message);
   }
 
   // Test 3: "Me Too" upvote button & "Most upvoted" sort option

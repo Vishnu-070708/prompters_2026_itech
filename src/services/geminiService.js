@@ -57,11 +57,11 @@ const SNAP_TO_FILL_SCHEMA = {
   properties: {
     title: {
       type: "string",
-      description: "Concise title for the civic issue shown in the photo"
+      description: "Plain, specific issue title written by a resident, max 8 words (e.g. 'Deep pothole with cracked road surface')"
     },
     description: {
       type: "string",
-      description: "Detailed description of the issue shown in the photo"
+      description: "1-2 simple sentences in first person or neutral voice describing only what is visible and why it is a problem without mentioning AI or images"
     },
     category: {
       type: "string",
@@ -468,8 +468,8 @@ User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
  */
 export function mockAnalyzePhoto(reason = "Local Heuristic") {
   return {
-    title: "Damaged roadway and severe pothole crater",
-    description: "Visual analysis of the uploaded photo reveals extensive pavement cracking and a dangerous pothole crater creating vehicular transit hazards.",
+    title: "Deep pothole with cracked road surface",
+    description: "There is a large pothole in the middle of the road with cracked pavement around it. It is dangerous for two-wheelers and cars.",
     category: "Roads & Infrastructure",
     isMock: true,
     mockReason: reason,
@@ -508,14 +508,18 @@ export async function analyzePhotoWithGemini({ imageBase64, apiKey, modelName })
     }
   }
 
-  const systemPrompt = `You are CivicResolve AI vision assistant.
-Examine the uploaded civic complaint photograph and accurately determine what municipal problem is shown.
-Return strict JSON with:
-title: A crisp, clear issue title (5-10 words)
-description: A 2-3 sentence description detailing the visible damage, safety hazard, and context
-category: Exactly one of: "Roads & Infrastructure", "Sanitation & Waste", "Street Lighting", "Water Supply & Drainage", "Public Safety", "Other"`;
+  const systemPrompt = `You are helping a resident write a short civic complaint note based on a photograph.
+Write the title and description exactly as a local resident would write them, NOT an AI report.
 
-  const userPrompt = "Analyze this uploaded photo of a municipal civic issue and determine its title, description, and category.";
+Strict rules:
+- Title: maximum 8 words, plain and specific (e.g. "Deep pothole with cracked road surface", "Overflowing trash bin on the pavement").
+- Description: 1-2 simple sentences in first person or neutral voice, describing ONLY what is visible and why it is a problem (e.g. "There is a large pothole in the middle of the road with cracked pavement around it. It is dangerous for two-wheelers and cars.").
+- NEVER use phrases like "visual analysis", "the uploaded photo", "the photo shows", "the image shows", "in this image", or "reveals".
+- Do NOT mention AI.
+- Do NOT invent details that are not visible (do not guess street names, city names, how many days it has been there, or people's names).
+- category: exactly one of: "Roads & Infrastructure", "Sanitation & Waste", "Street Lighting", "Water Supply & Drainage", "Public Safety", "Other".`;
+
+  const userPrompt = "Write a resident's civic complaint note for what is seen here: title (max 8 words), description (1-2 simple sentences), and category.";
 
   let lastError = null;
 
@@ -537,8 +541,8 @@ category: Exactly one of: "Roads & Infrastructure", "Sanitation & Waste", "Stree
         : "Roads & Infrastructure";
 
       return {
-        title: parsed.title || "Detected Civic Issue",
-        description: parsed.description || "Issue identified from uploaded image.",
+        title: parsed.title || "Deep pothole with cracked road surface",
+        description: parsed.description || "There is a large pothole in the middle of the road with cracked pavement around it. It is dangerous for two-wheelers and cars.",
         category: validCategory,
         isMock: false,
         modelUsed: modelToTry
