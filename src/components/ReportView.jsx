@@ -317,34 +317,34 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         </div>
 
         {/* Live Service Stats Strip */}
-        <div className="mt-8 pt-6 border-t border-white/[0.08] grid grid-cols-3 gap-3 sm:gap-6">
-          <div className="flex items-center space-x-3 p-3 rounded-2xl bg-slate-950/60 border border-white/[0.06]">
-            <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
-              <Activity className="w-5 h-5" />
+        <div className="mt-8 pt-6 border-t border-white/[0.08] grid grid-cols-3 gap-2 sm:gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:space-x-3 p-2 sm:p-3 rounded-2xl bg-slate-950/60 border border-white/[0.06] text-center sm:text-left">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 mb-1 sm:mb-0">
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Total Filed</p>
-              <p className="text-xl sm:text-2xl font-extrabold text-slate-100">{totalFiled}</p>
+              <p className="text-[9px] sm:text-[11px] uppercase tracking-wider font-semibold text-slate-400">Total Filed</p>
+              <p className="text-base sm:text-2xl font-extrabold text-slate-100">{totalFiled}</p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 p-3 rounded-2xl bg-slate-950/60 border border-white/[0.06]">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <CheckCheck className="w-5 h-5" />
+          <div className="flex flex-col sm:flex-row items-center sm:space-x-3 p-2 sm:p-3 rounded-2xl bg-slate-950/60 border border-white/[0.06] text-center sm:text-left">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-1 sm:mb-0">
+              <CheckCheck className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Resolved</p>
-              <p className="text-xl sm:text-2xl font-extrabold text-emerald-400">{resolvedCount}</p>
+              <p className="text-[9px] sm:text-[11px] uppercase tracking-wider font-semibold text-slate-400">Resolved</p>
+              <p className="text-base sm:text-2xl font-extrabold text-emerald-400">{resolvedCount}</p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 p-3 rounded-2xl bg-slate-950/60 border border-white/[0.06]">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-              <Flame className="w-5 h-5" />
+          <div className="flex flex-col sm:flex-row items-center sm:space-x-3 p-2 sm:p-3 rounded-2xl bg-slate-950/60 border border-white/[0.06] text-center sm:text-left">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-1 sm:mb-0">
+              <Flame className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Open Critical</p>
-              <p className="text-xl sm:text-2xl font-extrabold text-rose-400">{openCriticalCount}</p>
+              <p className="text-[9px] sm:text-[11px] uppercase tracking-wider font-semibold text-slate-400">Open Critical</p>
+              <p className="text-base sm:text-2xl font-extrabold text-rose-400">{openCriticalCount}</p>
             </div>
           </div>
         </div>

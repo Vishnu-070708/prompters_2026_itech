@@ -32,6 +32,8 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
           <nav className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
             <button
               onClick={() => setCurrentView('report')}
+              title="Report an Issue"
+              aria-label="Report an Issue"
               className={`flex items-center space-x-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 currentView === 'report'
                   ? 'bg-slate-900 text-teal-300 border border-teal-500/40 shadow-sm shadow-teal-500/10'
@@ -39,11 +41,14 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
               }`}
             >
               <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-teal-400" />
-              <span>Report an Issue</span>
+              <span className="hidden sm:inline">Report an Issue</span>
+              <span className="sm:hidden">Report</span>
             </button>
 
             <button
               onClick={() => setCurrentView('track')}
+              title="Track Requests"
+              aria-label="Track Requests"
               className={`flex items-center space-x-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 currentView === 'track'
                   ? 'bg-slate-900 text-teal-300 border border-teal-500/40 shadow-sm shadow-teal-500/10'
@@ -51,9 +56,10 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
               }`}
             >
               <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
-              <span>Track Requests</span>
+              <span className="hidden sm:inline">Track Requests</span>
+              <span className="sm:hidden">Track</span>
               {complaintsCount > 0 && (
-                <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold ml-1 ${
+                <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-bold ml-0.5 sm:ml-1 ${
                   currentView === 'track' 
                     ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40' 
                     : 'bg-slate-800 text-slate-400 border border-white/[0.06]'
@@ -65,6 +71,8 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
 
             <button
               onClick={() => setCurrentView('admin')}
+              title="Operations (Admin)"
+              aria-label="Operations (Admin)"
               className={`flex items-center space-x-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 currentView === 'admin'
                   ? 'bg-slate-900 text-teal-300 border border-teal-500/40 shadow-sm shadow-teal-500/10'
@@ -72,7 +80,8 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400" />
-              <span>Operations (Admin)</span>
+              <span className="hidden sm:inline">Operations (Admin)</span>
+              <span className="sm:hidden">Admin</span>
               <span className="hidden xl:inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 ml-1">
                 PIN: admin123
               </span>

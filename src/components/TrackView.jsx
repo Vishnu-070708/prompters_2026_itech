@@ -574,7 +574,7 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
                               {stageInfo.note && (
                                 <div 
                                   data-testid={`tracker-note-${item.id}-${stage.toLowerCase().replace(/\s+/g, '-')}`}
-                                  className="mt-2 p-2 rounded-xl bg-slate-950/90 border border-amber-500/30 text-[10px] text-amber-200 leading-tight max-w-[200px] shadow-sm text-left"
+                                  className="mt-2 p-2 rounded-xl bg-slate-950/90 border border-amber-500/30 text-[10px] text-amber-200 leading-tight w-full max-w-[100px] sm:max-w-[200px] break-words shadow-sm text-left"
                                 >
                                   <span className="font-bold text-[9px] uppercase tracking-wider text-amber-300 block mb-0.5">
                                     Admin Note:
