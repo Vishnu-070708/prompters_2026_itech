@@ -27,6 +27,20 @@ In urban municipalities and smart cities, citizen grievance redressal is severel
 
 ---
 
+## 📸 Live Application Screenshots
+
+| 1. Report an Issue — Snap-to-Fill with Gemini Vision | 2. Track Requests ("Service Requests") Public Docket |
+| :---: | :---: |
+| ![Report an Issue - Snap-to-Fill](docs/screenshots/01-report-snap-to-fill.jpg) | ![Track Requests - Public Docket](docs/screenshots/02-track-requests-service-card.jpg) |
+| *Citizens attach photos; Gemini Vision auto-fills title, description, and municipal category in resident voice.* | *Interactive ticket card with live timestamps, "Me Too" community upvotes, severity score (1-10), ETA, and Google Maps.* |
+
+| 3. Operations (Admin) — AI Daily Dispatch Directive | 4. Operations (Admin) — Municipal Action Docket |
+| :---: | :---: |
+| ![Operations Admin - AI Daily Dispatch Directive](docs/screenshots/03-admin-daily-dispatch-directive.jpg) | ![Operations Admin - Action Docket](docs/screenshots/04-admin-operations-docket.jpg) |
+| *AI synthesizes urgent high/critical incidents into prioritized operational directives grouped by department.* | *Municipal commanders inspect complaints, update status history, reassign crews, and publish official notes.* |
+
+---
+
 ## 🚀 3. Key Features
 
 - **Multimodal AI Citizen Grievance Portal & Snap-to-Fill**:
