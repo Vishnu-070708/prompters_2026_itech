@@ -34,6 +34,14 @@ const RESPONSE_SCHEMA = {
       type: "string",
       enum: PRIORITIES
     },
+    severityScore: {
+      type: "integer",
+      description: "Severity score from 1 to 10 where 1 is minimal inconvenience and 10 is immediate life-threatening emergency"
+    },
+    estimatedResolutionTime: {
+      type: "string",
+      description: "Estimated resolution time, e.g. '24-48 hours', '2-6 hours', '3-5 days'"
+    },
     recommendedDepartment: {
       type: "string"
     },
@@ -41,7 +49,7 @@ const RESPONSE_SCHEMA = {
       type: "string"
     }
   },
-  required: ["category", "priority", "recommendedDepartment", "aiReasoning"]
+  required: ["category", "priority", "severityScore", "estimatedResolutionTime", "recommendedDepartment", "aiReasoning"]
 };
 
 // In-memory + sessionStorage cache for whichever model worked for the session
@@ -128,6 +136,23 @@ export function mockClassifyIssue(title, description, reason = "Local Heuristic"
     aiReasoning = "Road structural flaws directly endanger motor traffic and pedestrian commute safety.";
   }
 
+  let severityScore = 5;
+  let estimatedResolutionTime = "3-5 days";
+
+  if (priority === "Critical") {
+    severityScore = matches(/\b(wire|wires|power line|shock|electrocution|fire|flames)\b/) ? 10 : 9;
+    estimatedResolutionTime = "2-6 hours";
+  } else if (priority === "High") {
+    severityScore = matches(/\b(deep|danger|dangerous|artery|hospital|flood|burst)\b/) ? 8 : 7;
+    estimatedResolutionTime = "24-48 hours";
+  } else if (priority === "Medium") {
+    severityScore = 5;
+    estimatedResolutionTime = "3-5 days";
+  } else {
+    severityScore = 3;
+    estimatedResolutionTime = "5-7 days";
+  }
+
   const modelBadge = `Mock AI mode (${reason})`;
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -140,6 +165,8 @@ export function mockClassifyIssue(title, description, reason = "Local Heuristic"
   return {
     category,
     priority,
+    severityScore,
+    estimatedResolutionTime,
     recommendedDepartment,
     aiReasoning: `${aiReasoning} (${reason})`,
     isMock: true,
@@ -309,7 +336,7 @@ Priorities: "Low", "Medium", "High", "Critical"
 
 STRICT OUTPUT REQUIREMENT:
 Respond ONLY with a JSON object conforming to the schema with:
-category, priority, recommendedDepartment, aiReasoning (1-2 crisp sentences on urgency and impact).`;
+category, priority, severityScore (integer 1-10), estimatedResolutionTime (e.g. "24-48 hours"), recommendedDepartment, aiReasoning (1-2 crisp sentences on urgency and impact).`;
 
   const userPrompt = `Analyze this citizen complaint:
 Title: ${title}
@@ -340,9 +367,18 @@ User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
       const recommendedDepartment = parsed.recommendedDepartment || "Public Works Department";
       const aiReasoning = parsed.aiReasoning || "Automated triage performed by Gemini model.";
 
+      const rawScore = parseInt(parsed.severityScore, 10);
+      const defaultScore = priority === "Critical" ? 9 : priority === "High" ? 7 : priority === "Medium" ? 5 : 3;
+      const severityScore = (!isNaN(rawScore) && rawScore >= 1 && rawScore <= 10) ? rawScore : defaultScore;
+
+      const defaultTime = priority === "Critical" ? "2-6 hours" : priority === "High" ? "24-48 hours" : priority === "Medium" ? "3-5 days" : "5-7 days";
+      const estimatedResolutionTime = (parsed.estimatedResolutionTime && String(parsed.estimatedResolutionTime).trim()) || defaultTime;
+
       return {
         category,
         priority,
+        severityScore,
+        estimatedResolutionTime,
         recommendedDepartment,
         aiReasoning,
         isMock: false,

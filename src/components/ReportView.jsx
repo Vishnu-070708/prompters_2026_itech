@@ -120,6 +120,8 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         location: location.trim() || "Unspecified Location",
         category: triage.category,
         priority: triage.priority,
+        severityScore: triage.severityScore,
+        estimatedResolutionTime: triage.estimatedResolutionTime,
         recommendedDepartment: triage.recommendedDepartment,
         aiReasoning: triage.aiReasoning,
         status: "Reported",
@@ -213,10 +215,10 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200 col-span-2 sm:col-span-1">
                 <span className="text-[11px] text-slate-500 font-medium block">Category</span>
-                <span className="text-sm font-bold text-slate-800">{submissionResult.category}</span>
+                <span className="text-sm font-bold text-slate-800 truncate block">{submissionResult.category}</span>
               </div>
               <div className="p-2.5 rounded-lg bg-white border border-slate-200">
                 <span className="text-[11px] text-slate-500 font-medium block">Assessed Priority</span>
@@ -228,7 +230,19 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                   {submissionResult.priority}
                 </span>
               </div>
-              <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200" data-testid="triage-severity">
+                <span className="text-[11px] text-slate-500 font-medium block">Severity Score</span>
+                <span className="text-sm font-extrabold text-indigo-700">
+                  {submissionResult.severityScore || 5} <span className="text-xs font-normal text-slate-400">/ 10</span>
+                </span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200" data-testid="triage-est-time">
+                <span className="text-[11px] text-slate-500 font-medium block">Est. Resolution</span>
+                <span className="text-sm font-bold text-slate-800 truncate block">
+                  {submissionResult.estimatedResolutionTime || "24-48 hours"}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200 col-span-2 sm:col-span-1">
                 <span className="text-[11px] text-slate-500 font-medium block">Assigned Dept</span>
                 <span className="text-sm font-bold text-slate-800 truncate block">{submissionResult.recommendedDepartment}</span>
               </div>

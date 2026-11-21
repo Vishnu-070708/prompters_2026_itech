@@ -239,7 +239,7 @@ export default function TrackView({ complaints, onSelectReport }) {
                   
                   {/* Card Header: Tracking ID + Badges + Date */}
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono font-extrabold text-base text-sky-700 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200">
                         {item.id}
                       </span>
@@ -248,6 +248,14 @@ export default function TrackView({ complaints, onSelectReport }) {
                       </span>
                       <span className={`text-xs px-2.5 py-1 rounded-md border ${PRIORITY_STYLES[item.priority] || PRIORITY_STYLES.Medium}`}>
                         {item.priority} Priority
+                      </span>
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center space-x-1" data-testid="complaint-severity">
+                        <span className="font-normal text-indigo-500">Severity:</span>
+                        <span>{item.severityScore ? `${item.severityScore}/10` : '5/10'}</span>
+                      </span>
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-50 text-slate-700 border border-slate-200 flex items-center space-x-1" data-testid="complaint-est-time">
+                        <Clock className="w-3 h-3 text-slate-500" />
+                        <span>Est: {item.estimatedResolutionTime || '24-48 hours'}</span>
                       </span>
                     </div>
 
