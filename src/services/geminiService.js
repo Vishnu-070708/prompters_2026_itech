@@ -166,8 +166,10 @@ export function mockClassifyIssue(title, description, reason = "Local Heuristic"
     priority = matches(/\b(pitch|women|danger|junction|accident|blackout|critical)\b/) ? "High" : "Medium";
     aiReasoning = "Inadequate nighttime illumination compromises urban security and vehicle visibility.";
   }
-  // 2. Public Safety (live wires, electric shock, trees falling, fire)
-  else if (matches(/\b(wire|wires|power line|electric|electrical|shock|electrocution|spark|sparks|fire|flames|fallen tree|tree branch|banyan|collapsed|hazard|threat)\b/)) {
+  // 2. Public Safety: only concrete, immediate hazards belong here. Keep generic
+  // words such as "hazard" out so a sanitation or road complaint still routes
+  // to its specialist department.
+  else if (matches(/\b(live wire|live wires|live electric power line|live power line|fallen power line|fallen pole|electric shock|electrocution|sparking wire|electrical fire|open manhole|open drain|fallen tree|tree branch|collapsed structure|traffic accident)\b/)) {
     category = "Public Safety";
     recommendedDepartment = "Police/Public Safety";
     priority = "Critical";

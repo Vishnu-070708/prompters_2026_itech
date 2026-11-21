@@ -42,11 +42,15 @@ async function runVerification() {
 
     const testMockPothole = mockClassifyIssue('Dangerous deep crater pothole on main road', 'Causing two-wheelers to fall');
     const testMockWire = mockClassifyIssue('Live electric power line broken and sparking', 'Extreme hazard');
+    const testMockGarbage = mockClassifyIssue('Overflowing garbage bin outside hospital', 'Solid waste has not been collected for days. Foul stench and hygiene hazard.');
 
     const mockPotholeScoreOk = typeof testMockPothole.severityScore === 'number' && testMockPothole.severityScore >= 1 && testMockPothole.severityScore <= 10;
     const mockPotholeTimeOk = typeof testMockPothole.estimatedResolutionTime === 'string' && testMockPothole.estimatedResolutionTime.length > 0;
     const mockWireCriticalScoreOk = testMockWire.severityScore >= 9;
     const mockWireCriticalTimeOk = testMockWire.estimatedResolutionTime.includes('hours');
+    const mockGarbageRoutesToSanitation = testMockGarbage.category === 'Sanitation & Waste' &&
+                                          testMockGarbage.recommendedDepartment === 'Municipal Sanitation' &&
+                                          testMockGarbage.priority === 'High';
 
     const allSamplesHaveScores = INITIAL_COMPLAINTS.every(c => 
       typeof c.severityScore === 'number' && 
@@ -65,12 +69,12 @@ async function runVerification() {
     const trackCardRenders = trackViewCode.includes('item.severityScore') && 
                              trackViewCode.includes('item.estimatedResolutionTime');
 
-    if (mockPotholeScoreOk && mockPotholeTimeOk && mockWireCriticalScoreOk && allSamplesHaveScores && reportCardRenders && trackCardRenders) {
+    if (mockPotholeScoreOk && mockPotholeTimeOk && mockWireCriticalScoreOk && mockGarbageRoutesToSanitation && allSamplesHaveScores && reportCardRenders && trackCardRenders) {
       record('1. Severity Score & Resolution Time', true, 
-        `Mock Pothole: ${testMockPothole.severityScore}/10 (${testMockPothole.estimatedResolutionTime}), Wire: ${testMockWire.severityScore}/10 (${testMockWire.estimatedResolutionTime}), all sample cards & triage cards render both`);
+        `Mock Pothole: ${testMockPothole.severityScore}/10 (${testMockPothole.estimatedResolutionTime}), Wire: ${testMockWire.severityScore}/10 (${testMockWire.estimatedResolutionTime}), hygiene-hazard garbage routes to sanitation, and all sample cards & triage cards render both`);
     } else {
       record('1. Severity Score & Resolution Time', false, 
-        `mockScore: ${mockPotholeScoreOk}, mockTime: ${mockPotholeTimeOk}, samples: ${allSamplesHaveScores}, report: ${reportCardRenders}, track: ${trackCardRenders}`);
+        `mockScore: ${mockPotholeScoreOk}, mockTime: ${mockPotholeTimeOk}, garbageRouting: ${mockGarbageRoutesToSanitation}, samples: ${allSamplesHaveScores}, report: ${reportCardRenders}, track: ${trackCardRenders}`);
     }
   } catch (e) {
     record('1. Severity Score & Resolution Time', false, e.message);
