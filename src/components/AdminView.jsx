@@ -19,7 +19,9 @@ import {
   X,
   ExternalLink,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 import { generateDailyDispatchSummary } from '../services/geminiService';
 
@@ -155,30 +157,30 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
   // PIN GATE SCREEN
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16">
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden text-center p-8">
-          <div className="w-16 h-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Lock className="w-8 h-8 text-sky-400" />
+      <div className="max-w-md mx-auto px-4 py-16 animate-fade-in text-slate-100">
+        <div className="bg-slate-900/90 rounded-2xl shadow-2xl border border-white/[0.08] overflow-hidden text-center p-8 backdrop-blur-xl">
+          <div className="w-16 h-16 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-400 flex items-center justify-center mx-auto mb-4 shadow-glow-teal">
+            <Lock className="w-8 h-8 text-teal-300" />
           </div>
 
-          <h2 className="text-2xl font-extrabold text-slate-900">Municipal Official Portal</h2>
-          <p className="text-xs text-slate-500 mt-1 mb-6">
-            Authorized administrative dashboard for complaint disposition and department dispatch.
+          <h2 className="text-2xl font-extrabold text-slate-100 tracking-tight">Operations Center</h2>
+          <p className="text-xs text-slate-400 mt-1 mb-6">
+            Authorized administrative dashboard for complaint disposition and municipal crew dispatch.
           </p>
 
           {/* Quick Demo Credentials Box for Hackathon Judges */}
-          <div className="mb-6 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-left">
-            <div className="flex items-center space-x-1.5 text-xs font-bold text-amber-800 uppercase tracking-wide mb-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+          <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-left">
+            <div className="flex items-center space-x-1.5 text-xs font-bold text-amber-300 uppercase tracking-wide mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>PromptWars Judge Access</span>
             </div>
-            <p className="text-xs text-amber-700">
-              Demo evaluation PIN is pre-set to: <strong className="font-mono text-amber-950 bg-amber-200/70 px-1 py-0.5 rounded">admin123</strong>
+            <p className="text-xs text-amber-200">
+              Demo evaluation PIN is pre-set to: <strong className="font-mono text-amber-100 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-500/40">admin123</strong>
             </p>
             <button
               type="button"
               onClick={handleQuickLogin}
-              className="mt-2.5 w-full py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-sm"
+              className="mt-3 w-full py-2 px-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-extrabold transition-all shadow-sm cursor-pointer"
             >
               1-Click Instant Judge Login
             </button>
@@ -191,17 +193,17 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
                 placeholder="Enter PIN (admin123)"
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900 text-center font-mono text-lg tracking-widest text-slate-900"
+                className="w-full px-4 py-3 rounded-xl border border-white/[0.1] bg-slate-950/80 focus:outline-none focus:ring-2 focus:ring-teal-400 text-center font-mono text-lg tracking-widest text-slate-100 placeholder-slate-600 shadow-inner"
               />
             </div>
 
             {authError && (
-              <p className="text-xs text-rose-600 font-semibold">{authError}</p>
+              <p className="text-xs text-rose-400 font-semibold">{authError}</p>
             )}
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-md transition-colors"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-extrabold text-sm shadow-glow-teal transition-all cursor-pointer"
             >
               Authorize & Enter Portal
             </button>
@@ -214,44 +216,45 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
 
   // AUTHENTICATED ADMIN DASHBOARD
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-7">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-7 animate-fade-in text-slate-100">
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-100 pb-5">
+      {/* Header: Operations Center & Municipal Operations Command Center */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-900 text-white">
-              Official Admin
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-500/10 text-teal-300 border border-teal-500/30">
+              Operations Center
             </span>
-            <span className="text-xs text-emerald-600 font-semibold flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Authorized Session</span>
+            <span className="text-xs text-emerald-400 font-semibold flex items-center space-x-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Authorized Control-Room Session</span>
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-950 tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight mt-1">
             Municipal Operations Command Center
           </h1>
+          <p className="text-xs text-slate-400 mt-0.5">Control-room dispatch, triage review, workload distribution, and live administrative notes.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
             data-testid="ai-daily-dispatch-btn"
             onClick={handleGenerateDispatch}
             disabled={isGeneratingDispatch}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-800 to-accent-600 hover:from-brand-900 hover:to-accent-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-brand-900/15 flex items-center space-x-2 transition-all hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-bold text-xs sm:text-sm shadow-glow-teal flex items-center space-x-2 transition-all hover:scale-[1.02] disabled:opacity-60 cursor-pointer"
           >
             {isGeneratingDispatch ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-sky-200" />
+                <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
                 <span>Synthesizing Dispatch...</span>
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 text-sky-200" />
+                <Sparkles className="w-4 h-4 text-slate-950" />
                 <span>AI Daily Dispatch Summary</span>
                 {openHighCriticalCount > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-rose-500 text-white ml-0.5">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white ml-0.5 shadow-sm">
                     {openHighCriticalCount} Open
                   </span>
                 )}
@@ -261,7 +264,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
 
           <button
             onClick={() => setIsAuthenticated(false)}
-            className="self-start sm:self-auto px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors"
+            className="self-start sm:self-auto px-4 py-2.5 rounded-xl border border-white/[0.1] hover:bg-slate-900 text-xs font-bold text-slate-300 transition-colors"
           >
             Lock / Logout
           </button>
@@ -270,15 +273,15 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
 
       {/* AI DAILY DISPATCH SUMMARY RESULT */}
       {dispatchSummary && (
-        <div data-testid="dispatch-summary-card" className="bg-gradient-to-br from-indigo-950 via-slate-900 to-sky-950 text-white rounded-2xl shadow-2xl border border-indigo-500/40 p-6 sm:p-7 animate-fadeIn space-y-5">
+        <div data-testid="dispatch-summary-card" className="bg-gradient-to-br from-indigo-950 via-slate-900 to-teal-950 text-white rounded-2xl shadow-2xl border border-teal-500/40 p-6 sm:p-7 animate-fade-in space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
             <div className="flex items-center space-x-3">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-white shadow-lg">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center text-slate-950 shadow-glow-teal font-bold">
                 <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30">
                     Municipal Emergency Dispatch Directive
                   </span>
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
@@ -300,7 +303,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
               <button
                 type="button"
                 onClick={handleCopyDispatch}
-                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold text-white flex items-center space-x-1.5 transition-colors border border-white/20"
+                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white flex items-center space-x-1.5 transition-colors border border-white/20"
               >
                 {copiedDispatch ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedDispatch ? 'Copied' : 'Copy Plan'}</span>
@@ -308,7 +311,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
               <button
                 type="button"
                 onClick={() => setDispatchSummary(null)}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors border border-white/20"
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors border border-white/20"
                 title="Dismiss Dispatch Directive"
               >
                 <X className="w-4 h-4" />
@@ -316,25 +319,25 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
             </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed bg-white/5 p-3.5 rounded-xl border border-white/10">
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed bg-slate-950/60 p-4 rounded-xl border border-white/10">
             {dispatchSummary.overview}
           </p>
 
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-sky-400">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-teal-300">
               Department Action Plans & Priority Deployments
             </h4>
 
             {dispatchSummary.departments && dispatchSummary.departments.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {dispatchSummary.departments.map((dept, idx) => (
-                  <div key={idx} className="bg-white/5 hover:bg-white/10 rounded-xl p-4 border border-white/10 space-y-2.5 transition-colors">
+                  <div key={idx} className="bg-slate-900/80 hover:bg-slate-900 rounded-xl p-4 border border-white/10 space-y-2.5 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <Building2 className="w-4 h-4 text-sky-400" />
+                        <Building2 className="w-4 h-4 text-teal-400" />
                         <span className="font-bold text-sm text-white">{dept.department}</span>
                       </div>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30">
                         {dept.complaintIds?.length || 0} issues
                       </span>
                     </div>
@@ -353,7 +356,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
                       <div className="flex flex-wrap items-center gap-1.5 pt-1">
                         <span className="text-[10px] text-slate-400">Target IDs:</span>
                         {dept.complaintIds.map(id => (
-                          <span key={id} className="text-[10px] font-mono font-bold bg-white/10 text-sky-300 px-1.5 py-0.5 rounded">
+                          <span key={id} className="text-[10px] font-mono font-bold bg-slate-950 text-cyan-300 px-2 py-0.5 rounded border border-teal-500/30">
                             {id}
                           </span>
                         ))}
@@ -363,7 +366,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
                 ))}
               </div>
             ) : (
-              <div className="text-xs text-slate-400 p-4 bg-white/5 rounded-xl">
+              <div className="text-xs text-slate-400 p-4 bg-slate-950/60 rounded-xl">
                 No departmental action required — no open High or Critical complaints.
               </div>
             )}
@@ -371,78 +374,86 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
         </div>
       )}
 
-      {/* KPI STATS ROW */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI STATS ROW (Control-Room Tiles) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
-        <div className="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm hover:-translate-y-0.5 transition-transform">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
+        <div className="bg-slate-900/90 p-5 rounded-2xl border border-white/[0.08] shadow-subtle-dark hover:-translate-y-0.5 transition-transform backdrop-blur-sm">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
             <span>Total Docket</span>
-            <FileSpreadsheet className="w-4 h-4 text-sky-600" />
+            <FileSpreadsheet className="w-4 h-4 text-teal-400" />
           </div>
-          <span className="text-3xl font-extrabold text-slate-900 mt-2 block">{stats.total}</span>
-          <span className="text-xs text-slate-500 mt-1 block">Active civic reports</span>
+          <span className="text-3xl font-extrabold text-slate-100 mt-2 block">{stats.total}</span>
+          <span className="text-xs text-teal-400 mt-1 block">Active civic records</span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm hover:-translate-y-0.5 transition-transform">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
+        <div className="bg-slate-900/90 p-5 rounded-2xl border border-white/[0.08] shadow-subtle-dark hover:-translate-y-0.5 transition-transform backdrop-blur-sm">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
             <span>Resolution Rate</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <span className="text-3xl font-extrabold text-emerald-600 mt-2 block">{stats.resolutionRate}%</span>
-          <span className="text-xs text-slate-500 mt-1 block">{stats.resolved} of {stats.total} complaints closed</span>
+          <span className="text-3xl font-extrabold text-emerald-400 mt-2 block">{stats.resolutionRate}%</span>
+          <span className="text-xs text-slate-400 mt-1 block">{stats.resolved} of {stats.total} closed</span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm hover:-translate-y-0.5 transition-transform">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
+        <div className="bg-slate-900/90 p-5 rounded-2xl border border-red-500/30 shadow-subtle-dark hover:-translate-y-0.5 transition-transform backdrop-blur-sm">
+          <div className="flex items-center justify-between text-rose-300 text-xs font-semibold uppercase tracking-wider">
             <span>Critical Unresolved</span>
-            <Flame className="w-4 h-4 text-rose-600" />
+            <Flame className="w-4 h-4 text-rose-400" />
           </div>
-          <span className="text-3xl font-extrabold text-rose-600 mt-2 block">{stats.critical}</span>
-          <span className="text-xs text-rose-700 font-medium mt-1 block">Requires instant dispatch</span>
+          <span className="text-3xl font-extrabold text-rose-400 mt-2 block">{stats.critical}</span>
+          <span className="text-xs text-rose-300 font-medium mt-1 block">Requires instant dispatch</span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-surface-200 shadow-sm hover:-translate-y-0.5 transition-transform">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
+        <div className="bg-slate-900/90 p-5 rounded-2xl border border-white/[0.08] shadow-subtle-dark hover:-translate-y-0.5 transition-transform backdrop-blur-sm">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
             <span>AI Triage Latency</span>
-            <Sparkles className="w-4 h-4 text-indigo-600" />
+            <Sparkles className="w-4 h-4 text-cyan-400" />
           </div>
-          <span className="text-3xl font-extrabold text-indigo-600 mt-2 block">&lt; 1.2s</span>
-          <span className="text-xs text-slate-500 mt-1 block">Real-time classification</span>
+          <span className="text-3xl font-extrabold text-cyan-400 mt-2 block">Real-time</span>
+          <span className="text-xs text-slate-400 mt-1 block">Gemini Flash-Lite</span>
         </div>
 
       </div>
 
       {/* DEPARTMENT WORKLOAD BREAKDOWN */}
-      <div className="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm">
-        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4 flex items-center space-x-2">
-          <Building2 className="w-4 h-4 text-sky-600" />
+      <div className="bg-slate-900/90 p-6 rounded-2xl border border-white/[0.08] shadow-subtle-dark backdrop-blur-sm">
+        <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center space-x-2">
+          <Building2 className="w-4 h-4 text-teal-400" />
           <span>Departmental Workload Allocation</span>
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {Object.entries(stats.deptCounts).map(([dept, count]) => (
-            <div key={dept} className="p-3 rounded-xl bg-surface-50 border border-surface-200">
-              <div className="flex items-center justify-between gap-3"><span className="text-[11px] font-bold text-slate-700 truncate" title={dept}>{dept}</span><span className="text-sm font-extrabold text-brand-800">{count}</span></div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-100"><div className="h-full rounded-full bg-gradient-to-r from-brand-600 to-accent-500" style={{ width: `${stats.total ? Math.max(8, (count / stats.total) * 100) : 0}%` }} /></div>
+            <div key={dept} className="p-3.5 rounded-xl bg-slate-950/80 border border-white/[0.06]">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-bold text-slate-300 truncate" title={dept}>{dept}</span>
+                <span className="text-sm font-extrabold text-teal-300">{count}</span>
+              </div>
+              <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-slate-800">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-400" 
+                  style={{ width: `${stats.total ? Math.max(8, (count / stats.total) * 100) : 0}%` }} 
+                />
+              </div>
             </div>
           ))}
         </div>
       </div>
 
       {/* COMPLAINTS DISPATCH & MANAGEMENT LIST */}
-      <div className="bg-white rounded-2xl border border-surface-200 shadow-sm overflow-hidden">
+      <div className="bg-slate-900/90 rounded-2xl border border-white/[0.08] shadow-subtle-dark overflow-hidden backdrop-blur-sm">
         
-        {/* Table Filters */}
-        <div className="p-5 border-b border-surface-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-brand-50/50">
+        {/* Table Filters Toolbar */}
+        <div className="p-5 border-b border-white/[0.08] flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-950/60">
           <div>
-            <h3 className="font-extrabold text-slate-900 text-base">Municipal Action Docket</h3>
-            <p className="text-xs text-slate-500">Edit status, reassign department, or attach official resolution notes.</p>
+            <h3 className="font-extrabold text-slate-100 text-base">Municipal Action Docket</h3>
+            <p className="text-xs text-slate-400">Edit status, reassign department, or attach official resolution notes.</p>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             <select
               value={filterDept}
               onChange={(e) => setFilterDept(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs bg-white font-medium"
+              className="px-3 py-1.5 rounded-xl border border-white/[0.1] text-xs bg-slate-950 text-slate-200 font-medium"
             >
               <option value="All">All Departments</option>
               {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -451,17 +462,18 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs bg-white font-medium"
+              className="px-3 py-1.5 rounded-xl border border-white/[0.1] text-xs bg-slate-950 text-slate-200 font-medium"
             >
               <option value="All">All Statuses</option>
               {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
 
-            <div className="pl-2 ml-1 border-l border-rose-200">
+            {/* Separated Destructive Action in Red */}
+            <div className="pl-2 ml-1 border-l border-rose-500/30">
               <button
                 type="button"
                 onClick={handleResetDemoData}
-                className="px-3 py-1.5 rounded-lg border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-bold flex items-center space-x-1.5 transition-colors"
+                className="px-3 py-1.5 rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold flex items-center space-x-1.5 transition-colors cursor-pointer"
                 title="Restore the six seeded demo complaints"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -472,43 +484,47 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
         </div>
 
         {/* List of items */}
-        <div className="divide-y divide-slate-200">
+        <div className="divide-y divide-white/[0.08]">
           {filtered.map((item) => (
-            <div key={item.id} className="p-5 sm:p-6 space-y-4 hover:bg-slate-50/50 transition-colors">
+            <div key={item.id} className="p-5 sm:p-6 space-y-4 hover:bg-slate-950/40 transition-colors">
               
               {/* Item Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center space-x-2">
-                  <span className="font-mono font-extrabold text-sm text-sky-800 bg-sky-100 px-2.5 py-1 rounded border border-sky-300">
+                <div className="flex items-center space-x-2.5">
+                  <span className="font-mono font-extrabold text-sm text-cyan-300 bg-slate-950 px-2.5 py-1 rounded-lg border border-teal-500/30">
                     {item.id}
                   </span>
-                  <span className="font-bold text-slate-900 text-base">
+                  <span className="font-bold text-slate-100 text-base">
                     {item.title}
                   </span>
                 </div>
+                
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-slate-500 font-medium">
+                  <span className="text-xs text-slate-400 font-medium">
                     {item.location}
                   </span>
+                  
                   {((item.coordinates?.lat && item.coordinates?.lng) || (item.lat && item.lng)) && (
                     <a
                       href={`https://www.google.com/maps?q=${item.coordinates?.lat || item.lat},${item.coordinates?.lng || item.lng}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       data-testid={`admin-maps-link-${item.id}`}
-                      className="inline-flex items-center space-x-1 text-xs font-semibold text-sky-600 hover:text-sky-800 hover:underline ml-1"
+                      className="inline-flex items-center space-x-1 text-xs font-semibold text-cyan-400 hover:text-cyan-300 hover:underline ml-1"
                     >
-                      <ExternalLink className="w-3.5 h-3.5 text-sky-600" />
+                      <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
                       <span>Open in Maps</span>
                     </a>
                   )}
+
+                  {/* Destructive Delete Button Separated in Red */}
                   <button
                     type="button"
                     onClick={() => handleDeleteComplaint(item)}
-                    className="inline-flex items-center space-x-1 text-xs font-bold text-rose-700 hover:text-rose-900 hover:underline ml-1"
+                    className="inline-flex items-center space-x-1 text-xs font-bold px-2 py-1 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 transition-colors ml-1 cursor-pointer"
                     data-testid={`delete-complaint-${item.id}`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-3 h-3" />
                     <span>Delete</span>
                   </button>
                 </div>
@@ -519,47 +535,47 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
                 
                 {/* Status Toggle */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                     Status
                   </label>
                   <select
                     value={item.status}
                     onChange={(e) => onUpdateComplaint(item.id, { status: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg text-xs font-bold border ${
-                      item.status === 'Resolved' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
-                      item.status === 'In Progress' ? 'bg-sky-50 text-sky-800 border-sky-300' :
-                      'bg-amber-50 text-amber-800 border-amber-300'
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-bold border ${
+                      item.status === 'Resolved' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40' :
+                      item.status === 'In Progress' ? 'bg-sky-500/15 text-sky-300 border-sky-500/40' :
+                      'bg-amber-500/15 text-amber-300 border-amber-500/40'
                     }`}
                   >
-                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                    {STATUSES.map(s => <option key={s} value={s} className="bg-slate-900 text-slate-100">{s}</option>)}
                   </select>
                 </div>
 
                 {/* Priority Override */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                     Priority Level
                   </label>
                   <select
                     value={item.priority}
                     onChange={(e) => onUpdateComplaint(item.id, { priority: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg text-xs font-semibold border border-slate-300 bg-white"
+                    className="w-full px-3 py-2 rounded-xl text-xs font-semibold border border-white/[0.1] bg-slate-950 text-slate-200"
                   >
-                    {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+                    {PRIORITIES.map(p => <option key={p} value={p} className="bg-slate-900 text-slate-100">{p}</option>)}
                   </select>
                 </div>
 
                 {/* Department Reassign */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                     Assigned Department
                   </label>
                   <select
                     value={item.recommendedDepartment}
                     onChange={(e) => onUpdateComplaint(item.id, { recommendedDepartment: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg text-xs font-semibold border border-slate-300 bg-white"
+                    className="w-full px-3 py-2 rounded-xl text-xs font-semibold border border-white/[0.1] bg-slate-950 text-slate-200"
                   >
-                    {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {DEPARTMENTS.map(d => <option key={d} value={d} className="bg-slate-900 text-slate-100">{d}</option>)}
                   </select>
                 </div>
 
@@ -567,7 +583,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
 
               {/* Official Admin Note Box */}
               <div className="pt-2">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                   Official Municipal Dispatch / Resolution Note (Publicly Visible on Track View)
                 </label>
                 <div className="flex gap-2">
@@ -577,7 +593,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
                     placeholder="e.g. Crew assigned to patch road; expected completion by 6 PM today."
                     value={notesDrafts[item.id] !== undefined ? notesDrafts[item.id] : (item.adminNotes || '')}
                     onChange={(e) => setNotesDrafts({ ...notesDrafts, [item.id]: e.target.value })}
-                    className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-white/[0.1] bg-slate-950 text-xs text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-teal-400 focus:outline-none"
                   />
                   <button
                     data-testid="admin-save-note-btn"
@@ -585,16 +601,16 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
                       const input = e.currentTarget.parentElement?.querySelector('input');
                       handleSaveNotes(item.id, input ? input.value : item.adminNotes);
                     }}
-                    className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs flex items-center space-x-1.5 transition-colors"
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-bold text-xs flex items-center space-x-1.5 transition-all shadow-glow-teal cursor-pointer"
                   >
                     {savedSuccessMap[item.id] ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <Check className="w-3.5 h-3.5 text-slate-950" />
                         <span>Saved</span>
                       </>
                     ) : (
                       <>
-                        <Save className="w-3.5 h-3.5" />
+                        <Save className="w-3.5 h-3.5 text-slate-950" />
                         <span>Save Note</span>
                       </>
                     )}
