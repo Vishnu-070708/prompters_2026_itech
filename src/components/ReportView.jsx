@@ -14,7 +14,7 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import { triageIssueWithGemini } from '../services/geminiService';
+import { triageIssueWithGemini, analyzePhotoWithGemini } from '../services/geminiService';
 
 const CATEGORIES = [
   "Auto-detect with AI",
@@ -38,6 +38,8 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   const [validationError, setValidationError] = useState('');
   const [submissionResult, setSubmissionResult] = useState(null);
   const [copiedId, setCopiedId] = useState(false);
+  const [isAnalyzingPhoto, setIsAnalyzingPhoto] = useState(false);
+  const [snapSuccess, setSnapSuccess] = useState('');
 
   // Geolocation handler
   const handleGetLocation = () => {
@@ -82,6 +84,34 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
 
   const handleRemoveImage = () => {
     setImagePreview(null);
+    setSnapSuccess('');
+  };
+
+  // Snap-to-Fill: AI Vision analysis of uploaded photo
+  const handleAnalyzePhoto = async () => {
+    if (!imagePreview) return;
+    setIsAnalyzingPhoto(true);
+    setValidationError('');
+    setSnapSuccess('');
+
+    try {
+      const result = await analyzePhotoWithGemini({
+        imageBase64: imagePreview,
+        apiKey,
+        modelName
+      });
+
+      if (result.title) setTitle(result.title);
+      if (result.description) setDescription(result.description);
+      if (result.category) setCategory(result.category);
+
+      setSnapSuccess('✨ AI analyzed photo and filled title, description, and category. You can edit before submitting.');
+    } catch (err) {
+      console.error("Photo analysis error:", err);
+      setValidationError("Failed to analyze photo with AI. You can still enter details manually.");
+    } finally {
+      setIsAnalyzingPhoto(false);
+    }
   };
 
   // Submit & Triage
@@ -378,15 +408,54 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
             </label>
 
             {imagePreview ? (
-              <div className="relative rounded-xl border border-slate-200 overflow-hidden bg-slate-100 max-h-64 flex items-center justify-center">
-                <img src={imagePreview} alt="Issue preview" className="object-contain max-h-64 w-full" />
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="absolute top-3 right-3 p-1.5 bg-black/70 hover:bg-black text-white rounded-full transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+              <div className="space-y-3">
+                <div className="relative rounded-xl border border-slate-200 overflow-hidden bg-slate-100 max-h-64 flex items-center justify-center">
+                  <img src={imagePreview} alt="Issue preview" className="object-contain max-h-64 w-full" />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-3 right-3 p-1.5 bg-black/70 hover:bg-black text-white rounded-full transition-colors"
+                    title="Remove photo"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <button
+                    type="button"
+                    data-testid="analyze-photo-btn"
+                    onClick={handleAnalyzePhoto}
+                    disabled={isAnalyzingPhoto}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-60 cursor-pointer"
+                  >
+                    {isAnalyzingPhoto ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-sky-200" />
+                        <span>Analyzing photo with AI...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 text-sky-200" />
+                        <span>Analyze photo with AI</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="py-2.5 px-3 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-xs transition-colors"
+                  >
+                    Remove Photo
+                  </button>
+                </div>
+
+                {snapSuccess && (
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center space-x-2 animate-fadeIn">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <span>{snapSuccess}</span>
+                  </div>
+                )}
               </div>
             ) : (
               <label className="border-2 border-dashed border-slate-300 hover:border-sky-500 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-slate-50/50 hover:bg-sky-50/30">

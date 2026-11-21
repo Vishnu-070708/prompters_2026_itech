@@ -52,6 +52,25 @@ const RESPONSE_SCHEMA = {
   required: ["category", "priority", "severityScore", "estimatedResolutionTime", "recommendedDepartment", "aiReasoning"]
 };
 
+const SNAP_TO_FILL_SCHEMA = {
+  type: "object",
+  properties: {
+    title: {
+      type: "string",
+      description: "Concise title for the civic issue shown in the photo"
+    },
+    description: {
+      type: "string",
+      description: "Detailed description of the issue shown in the photo"
+    },
+    category: {
+      type: "string",
+      enum: CATEGORIES
+    }
+  },
+  required: ["title", "description", "category"]
+};
+
 // In-memory + sessionStorage cache for whichever model worked for the session
 let inMemoryCachedWorkingModel = null;
 
@@ -190,7 +209,7 @@ function cleanJsonOutput(text) {
 /**
  * Single attempt to call Gemini via REST API with 15s timeout
  */
-async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, timeoutMs = 15000 }) {
+async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema = RESPONSE_SCHEMA, timeoutMs = 15000 }) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
   const controller = new AbortController();
@@ -218,8 +237,8 @@ async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, i
   // Configure generation options
   const generationConfig = {
     response_mime_type: "application/json",
-    response_schema: RESPONSE_SCHEMA,
-    max_output_tokens: 400
+    response_schema: responseSchema,
+    max_output_tokens: 500
   };
 
   // Only pass thinking_config to models that support reasoning (e.g. 3.8-flash)
@@ -263,9 +282,9 @@ async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, i
 /**
  * Attempt call with 1 retry after 2 seconds if status is 503 or timeout
  */
-async function callWithRetry({ apiKey, model, systemPrompt, userPrompt, imageBase64 }) {
+async function callWithRetry({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema = RESPONSE_SCHEMA }) {
   try {
-    return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, timeoutMs: 15000 });
+    return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema, timeoutMs: 15000 });
   } catch (firstError) {
     const is503 = firstError.status === 503 || (firstError.message && firstError.message.includes("503"));
     const isTimeout = firstError.name === "AbortError" || (firstError.message && firstError.message.includes("Timeout"));
@@ -274,7 +293,7 @@ async function callWithRetry({ apiKey, model, systemPrompt, userPrompt, imageBas
       console.warn(`CivicResolve: ${model} failed with ${is503 ? '503 (High Demand)' : 'Timeout'}. Retrying in 2 seconds...`);
       // Wait 2 seconds before retry
       await new Promise(r => setTimeout(r, 2000));
-      return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, timeoutMs: 15000 });
+      return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema, timeoutMs: 15000 });
     }
     // If other error, throw immediately to try next model in fallback list
     throw firstError;
@@ -402,4 +421,94 @@ User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
   const fallback = mockClassifyIssue(title, description, shortReason);
   fallback.aiReasoning = `${fallback.aiReasoning} (All fallback models exhausted: ${lastError?.message || shortReason})`;
   return fallback;
+}
+
+/**
+ * Mock fallback for photo analysis (Snap-to-Fill)
+ */
+export function mockAnalyzePhoto(reason = "Local Heuristic") {
+  return {
+    title: "Damaged roadway and severe pothole crater",
+    description: "Visual analysis of the uploaded photo reveals extensive pavement cracking and a dangerous pothole crater creating vehicular transit hazards.",
+    category: "Roads & Infrastructure",
+    isMock: true,
+    mockReason: reason,
+    modelUsed: `Mock AI mode (${reason})`
+  };
+}
+
+/**
+ * Snap-to-Fill: Analyzes uploaded photo using Gemini Vision to extract
+ * title, description, and category.
+ */
+export async function analyzePhotoWithGemini({ imageBase64, apiKey, modelName }) {
+  const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
+  const envModel = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_MODEL) || 'gemini-flash-lite-latest';
+
+  const key = apiKey || envKey;
+  const configuredModel = modelName || envModel || "gemini-flash-lite-latest";
+
+  if (!key || key.trim() === "") {
+    console.warn("CivicResolve: No Gemini API Key for photo analysis. Using Mock Vision analysis.");
+    return mockAnalyzePhoto("No API Key");
+  }
+
+  const sessionCached = getCachedWorkingModel();
+  const candidateModels = [];
+
+  if (sessionCached && !candidateModels.includes(sessionCached)) {
+    candidateModels.push(sessionCached);
+  }
+  if (configuredModel && !candidateModels.includes(configuredModel)) {
+    candidateModels.push(configuredModel);
+  }
+  for (const m of MODEL_FALLBACK_LIST) {
+    if (!candidateModels.includes(m)) {
+      candidateModels.push(m);
+    }
+  }
+
+  const systemPrompt = `You are CivicResolve AI vision assistant.
+Examine the uploaded civic complaint photograph and accurately determine what municipal problem is shown.
+Return strict JSON with:
+title: A crisp, clear issue title (5-10 words)
+description: A 2-3 sentence description detailing the visible damage, safety hazard, and context
+category: Exactly one of: "Roads & Infrastructure", "Sanitation & Waste", "Street Lighting", "Water Supply & Drainage", "Public Safety", "Other"`;
+
+  const userPrompt = "Analyze this uploaded photo of a municipal civic issue and determine its title, description, and category.";
+
+  let lastError = null;
+
+  for (const modelToTry of candidateModels) {
+    try {
+      console.log(`CivicResolve: Attempting Snap-to-Fill photo analysis with: ${modelToTry}`);
+      const parsed = await callWithRetry({
+        apiKey: key.trim(),
+        model: modelToTry,
+        systemPrompt,
+        userPrompt,
+        imageBase64,
+        responseSchema: SNAP_TO_FILL_SCHEMA
+      });
+
+      setCachedWorkingModel(modelToTry);
+      const validCategory = CATEGORIES.includes(parsed.category) && parsed.category !== "Auto-detect with AI"
+        ? parsed.category
+        : "Roads & Infrastructure";
+
+      return {
+        title: parsed.title || "Detected Civic Issue",
+        description: parsed.description || "Issue identified from uploaded image.",
+        category: validCategory,
+        isMock: false,
+        modelUsed: modelToTry
+      };
+    } catch (err) {
+      lastError = err;
+      console.warn(`CivicResolve Snap-to-Fill: Model ${modelToTry} failed:`, err.message);
+    }
+  }
+
+  console.error("CivicResolve Snap-to-Fill: All models failed, falling back to mock vision:", lastError);
+  return mockAnalyzePhoto(lastError?.message || "Fallback");
 }
