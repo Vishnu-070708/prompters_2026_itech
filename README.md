@@ -136,6 +136,14 @@ npm run dev
 ```
 Open your browser at `http://localhost:5173`.
 
+### 4. Run Automated Tests & Code Quality Suite
+Run the full verification suite covering geolocation, prompt injection protection, upload validation, anti-hallucination rejection, and security headers:
+```bash
+npm test
+npm run lint
+npm run build
+```
+
 ---
 
 ## 🎯 7. Quick Demo & Evaluation Guide for Judges

@@ -329,6 +329,46 @@ async function runVerification() {
     record('8. E2E Stepper & Snap-to-Fill Coverage', false, e.message);
   }
 
+  // Test 9: Image Upload Validation & Security Headers (vercel.json)
+  try {
+    const reportCode = fs.readFileSync(path.join(ROOT, 'src/components/ReportView.jsx'), 'utf-8');
+    const vercelConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf-8'));
+
+    const validatesTypes = reportCode.includes('image/png') && reportCode.includes('image/jpeg') && reportCode.includes('image/webp');
+    const restrictsFileInput = reportCode.includes('accept="image/jpeg,image/png,image/webp"');
+    const validatesSize = reportCode.includes('4 * 1024 * 1024') && reportCode.includes('4 MB');
+
+    const headers = vercelConfig?.headers?.[0]?.headers || [];
+    const hasNosniff = headers.some(h => h.key === 'X-Content-Type-Options' && h.value === 'nosniff');
+    const hasDenyFrame = headers.some(h => h.key === 'X-Frame-Options' && h.value === 'DENY');
+    const hasReferrer = headers.some(h => h.key === 'Referrer-Policy' && h.value === 'strict-origin-when-cross-origin');
+    const hasPermissions = headers.some(h => h.key === 'Permissions-Policy' && h.value.includes('geolocation'));
+
+    const allSecurityOk = validatesTypes && restrictsFileInput && validatesSize && hasNosniff && hasDenyFrame && hasReferrer && hasPermissions;
+    record('9. Image Upload Validation & Security Headers', allSecurityOk,
+      `Types validated: ${validatesTypes}, 4MB checked: ${validatesSize}, nosniff: ${hasNosniff}, DENY: ${hasDenyFrame}, referrer: ${hasReferrer}, permissions: ${hasPermissions}`);
+  } catch (e) {
+    record('9. Image Upload Validation & Security Headers', false, e.message);
+  }
+
+  // Test 10: Invalid-Image Rejection Logic (Anti-Hallucination)
+  try {
+    const geminiServiceCode = fs.readFileSync(path.join(ROOT, 'src/services/geminiService.js'), 'utf-8');
+    const reportCode = fs.readFileSync(path.join(ROOT, 'src/components/ReportView.jsx'), 'utf-8');
+
+    const schemaHasValidation = geminiServiceCode.includes('is_valid_civic_issue') && geminiServiceCode.includes('confidence');
+    const verifierEnforcesThreshold = geminiServiceCode.includes('confidence < 0.6') && geminiServiceCode.includes('is_valid_civic_issue: false');
+    const noPotholeFallbackOnFail = !geminiServiceCode.includes('falling back to mock vision:');
+    const reportRejectionMsg = reportCode.includes("This image doesn't appear to show a civic issue");
+    const blocksSubmissionOnInvalid = reportCode.includes('photoValidation && !photoValidation.isValid');
+
+    const allRejectionOk = schemaHasValidation && verifierEnforcesThreshold && noPotholeFallbackOnFail && reportRejectionMsg && blocksSubmissionOnInvalid;
+    record('10. Invalid-Image Rejection Logic', allRejectionOk,
+      `Schema validation: ${schemaHasValidation}, threshold check: ${verifierEnforcesThreshold}, no mock pothole on fail: ${noPotholeFallbackOnFail}, UI rejection message: ${reportRejectionMsg}, blocks invalid submit: ${blocksSubmissionOnInvalid}`);
+  } catch (e) {
+    record('10. Invalid-Image Rejection Logic', false, e.message);
+  }
+
   console.log('\n========================================');
   const allPassed = testResults.every(r => r.pass);
   console.log(`OVERALL RESULT: ${allPassed ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}`);

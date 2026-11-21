@@ -70,7 +70,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
               <a 
                 href="https://aistudio.google.com/app/apikey" 
                 target="_blank" 
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="text-xs text-teal-400 hover:text-teal-300 flex items-center space-x-1 hover:underline lowercase tracking-normal font-normal"
               >
                 <span>Get Free Key</span>

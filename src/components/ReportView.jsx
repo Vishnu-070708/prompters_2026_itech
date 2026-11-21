@@ -821,7 +821,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                 <span className="text-xs text-slate-500 mt-1">PNG, JPG, or WEBP (Compressed & verified, max 4MB)</span>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleImageChange}
                   className="hidden"
                 />
