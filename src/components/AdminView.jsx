@@ -16,7 +16,8 @@ import {
   FileSpreadsheet,
   Loader2,
   Copy,
-  X
+  X,
+  ExternalLink
 } from 'lucide-react';
 import { generateDailyDispatchSummary } from '../services/geminiService';
 
@@ -459,9 +460,23 @@ export default function AdminView({ complaints, onUpdateComplaint, apiKey, model
                     {item.title}
                   </span>
                 </div>
-                <span className="text-xs text-slate-500 font-medium">
-                  {item.location}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-slate-500 font-medium">
+                    {item.location}
+                  </span>
+                  {((item.coordinates?.lat && item.coordinates?.lng) || (item.lat && item.lng)) && (
+                    <a
+                      href={`https://www.google.com/maps?q=${item.coordinates?.lat || item.lat},${item.coordinates?.lng || item.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid={`admin-maps-link-${item.id}`}
+                      className="inline-flex items-center space-x-1 text-xs font-semibold text-sky-600 hover:text-sky-800 hover:underline ml-1"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-sky-600" />
+                      <span>Open in Maps</span>
+                    </a>
+                  )}
+                </div>
               </div>
 
               {/* Controls Row: Status, Priority, Department */}

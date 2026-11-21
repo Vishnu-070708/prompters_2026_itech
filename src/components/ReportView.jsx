@@ -12,7 +12,8 @@ import {
   AlertTriangle, 
   FileText,
   Copy,
-  Check
+  Check,
+  ExternalLink
 } from 'lucide-react';
 import { triageIssueWithGemini, analyzePhotoWithGemini } from '../services/geminiService';
 
@@ -30,6 +31,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [coords, setCoords] = useState(null);
   const [category, setCategory] = useState('Auto-detect with AI');
   const [imagePreview, setImagePreview] = useState(null);
   
@@ -41,26 +43,54 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   const [isAnalyzingPhoto, setIsAnalyzingPhoto] = useState(false);
   const [snapSuccess, setSnapSuccess] = useState('');
 
-  // Geolocation handler
+  // Geolocation handler with OpenStreetMap Nominatim reverse geocoding
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
-      setValidationError("Geolocation is not supported by your browser.");
+      setValidationError("Couldn't get your location, please type it");
+      setLocation('');
+      setCoords(null);
       return;
     }
+
     setIsLocating(true);
+    setValidationError('');
+
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        // Approximate location label for Coimbatore region
-        setLocation(`Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)} (Peelamedu, Coimbatore)`);
-        setIsLocating(false);
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          setCoords({ lat: latitude, lng: longitude });
+
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          if (!response.ok) {
+            throw new Error(`Nominatim request failed with status: ${response.status}`);
+          }
+          const data = await response.json();
+          if (data && data.display_name) {
+            setLocation(data.display_name);
+            setValidationError('');
+          } else {
+            throw new Error("No address found in reverse geocoding response");
+          }
+        } catch (error) {
+          console.warn("Reverse geocode lookup error:", error);
+          setLocation('');
+          setCoords(null);
+          setValidationError("Couldn't get your location, please type it");
+        } finally {
+          setIsLocating(false);
+        }
       },
       (error) => {
-        console.warn("Geolocation error:", error);
-        setLocation("Avinashi Road, Peelamedu, Coimbatore");
+        console.warn("Geolocation permission error:", error);
+        setLocation('');
+        setCoords(null);
+        setValidationError("Couldn't get your location, please type it");
         setIsLocating(false);
       },
-      { timeout: 7000 }
+      { timeout: 10000, enableHighAccuracy: true }
     );
   };
 
@@ -148,6 +178,9 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         title: title.trim(),
         description: description.trim(),
         location: location.trim() || "Unspecified Location",
+        coordinates: coords ? { lat: coords.lat, lng: coords.lng } : null,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
         category: triage.category,
         priority: triage.priority,
         severityScore: triage.severityScore,
@@ -176,6 +209,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
       setTitle('');
       setDescription('');
       setLocation('');
+      setCoords(null);
       setCategory('Auto-detect with AI');
       setImagePreview(null);
 
@@ -373,16 +407,22 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
               </div>
               <button
                 type="button"
+                data-testid="use-location-btn"
                 onClick={handleGetLocation}
                 disabled={isLocating}
                 className="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm flex items-center space-x-1.5 transition-colors border border-slate-200"
               >
                 {isLocating ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-sky-600" />
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-sky-600" />
+                    <span className="hidden sm:inline">Detecting location...</span>
+                  </>
                 ) : (
-                  <MapPin className="w-4 h-4 text-sky-600" />
+                  <>
+                    <MapPin className="w-4 h-4 text-sky-600" />
+                    <span className="hidden sm:inline">Use My Location</span>
+                  </>
                 )}
-                <span className="hidden sm:inline">Use My Location</span>
               </button>
             </div>
           </div>

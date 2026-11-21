@@ -13,7 +13,8 @@ import {
   MessageSquare,
   FileCheck2,
   ThumbsUp,
-  ArrowUpDown
+  ArrowUpDown,
+  ExternalLink
 } from 'lucide-react';
 
 const STATUS_STAGES = ["Reported", "In Progress", "Resolved"];
@@ -429,6 +430,18 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
                           <Building2 className="w-3.5 h-3.5 text-indigo-500" />
                           <span className="font-medium text-slate-800">{item.recommendedDepartment}</span>
                         </span>
+                        {((item.coordinates?.lat && item.coordinates?.lng) || (item.lat && item.lng)) && (
+                          <a
+                            href={`https://www.google.com/maps?q=${item.coordinates?.lat || item.lat},${item.coordinates?.lng || item.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-testid={`maps-link-${item.id}`}
+                            className="inline-flex items-center space-x-1 font-semibold text-sky-600 hover:text-sky-800 hover:underline"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 text-sky-600" />
+                            <span>Open in Maps</span>
+                          </a>
+                        )}
                       </div>
 
                       {/* AI Reasoning Pill */}

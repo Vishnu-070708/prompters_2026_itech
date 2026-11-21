@@ -206,6 +206,34 @@ async function runVerification() {
     record('6. Strict Hackathon Rules Adherence', false, e.message);
   }
 
+  // Test 7: Real Geolocation with Nominatim & Open in Maps
+  try {
+    const reportCode = fs.readFileSync(path.join(ROOT, 'src/components/ReportView.jsx'), 'utf-8');
+    const trackCode = fs.readFileSync(path.join(ROOT, 'src/components/TrackView.jsx'), 'utf-8');
+    const adminCode = fs.readFileSync(path.join(ROOT, 'src/components/AdminView.jsx'), 'utf-8');
+    const { INITIAL_COMPLAINTS } = await import('../src/data/sampleComplaints.js');
+
+    const usesNominatim = reportCode.includes('nominatim.openstreetmap.org/reverse');
+    const hasClearError = reportCode.includes("Couldn't get your location, please type it");
+    const noFakeFallback = !reportCode.includes('"Avinashi Road, Peelamedu, Coimbatore"') && !reportCode.includes("'Avinashi Road, Peelamedu, Coimbatore'");
+    const hasLoadingState = reportCode.includes('Detecting location...') || reportCode.includes('isLocating');
+    const savesCoords = reportCode.includes('coordinates: coords');
+
+    const trackHasMapsLink = trackCode.includes('maps.google.com/maps?q=') || trackCode.includes('google.com/maps?q=');
+    const adminHasMapsLink = adminCode.includes('maps.google.com/maps?q=') || adminCode.includes('google.com/maps?q=');
+    const samplesHaveCoords = INITIAL_COMPLAINTS.every(c => c.coordinates && typeof c.coordinates.lat === 'number' && typeof c.coordinates.lng === 'number');
+
+    if (usesNominatim && hasClearError && noFakeFallback && hasLoadingState && savesCoords && trackHasMapsLink && adminHasMapsLink && samplesHaveCoords) {
+      record('7. Real Geolocation & Open in Maps', true, 
+        `Reverse-geocodes via Nominatim, handles error with "Couldn't get your location, please type it", 0 fake fallbacks, saves coordinates, and renders Open in Maps link on Track & Admin`);
+    } else {
+      record('7. Real Geolocation & Open in Maps', false, 
+        `nominatim: ${usesNominatim}, errorMsg: ${hasClearError}, noFake: ${noFakeFallback}, loading: ${hasLoadingState}, coords: ${savesCoords}, trackMaps: ${trackHasMapsLink}, adminMaps: ${adminHasMapsLink}, samples: ${samplesHaveCoords}`);
+    }
+  } catch (e) {
+    record('7. Real Geolocation & Open in Maps', false, e.message);
+  }
+
   console.log('\n========================================');
   const allPassed = testResults.every(r => r.pass);
   console.log(`OVERALL RESULT: ${allPassed ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}`);

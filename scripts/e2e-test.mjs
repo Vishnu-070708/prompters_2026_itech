@@ -64,7 +64,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // TEST 3: "Use My Location" button (doesn't crash if denied)
+    // TEST 3: "Use My Location" button (denied permission leaves field empty with clear message)
     // -------------------------------------------------------------
     try {
       const context = browser.defaultBrowserContext();
@@ -72,16 +72,19 @@ async function runTests() {
 
       const locBtn = await page.waitForSelector('button ::-p-text(Use My Location), button ::-p-text(Location)');
       await locBtn.click();
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1200));
 
       const locVal = await page.$eval('input[placeholder*="Avinashi Road"]', el => el.value);
-      if (locVal && locVal.length > 0) {
-        record('3. Geolocation Fallback', 'PASS', `Gracefully handled location: "${locVal}"`);
+      const pageText = await page.evaluate(() => document.body.textContent);
+      const hasDeniedMessage = pageText.includes("Couldn't get your location, please type it");
+
+      if (locVal === '' && hasDeniedMessage) {
+        record('3. Geolocation Permission Denied', 'PASS', `Gracefully showed clear message "${"Couldn't get your location, please type it"}" and left input empty without inserting fake address`);
       } else {
-        record('3. Geolocation Fallback', 'FAIL', 'Location remained empty after click');
+        record('3. Geolocation Permission Denied', 'FAIL', `locVal: "${locVal}", hasDeniedMessage: ${hasDeniedMessage}`);
       }
     } catch (e) {
-      record('3. Geolocation Fallback', 'FAIL', e.message);
+      record('3. Geolocation Permission Denied', 'FAIL', e.message);
     }
 
     // -------------------------------------------------------------

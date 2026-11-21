@@ -30,8 +30,9 @@ In urban municipalities and smart cities, citizen grievance redressal is severel
 ## 🚀 3. Key Features
 
 - **Multimodal AI Citizen Grievance Portal & Snap-to-Fill**:
+  - **Real Geolocation & OpenStreetMap Nominatim Reverse-Geocoding**: "Use My Location" requests precise browser geolocation coordinates (`lat`, `lng`), reverse-geocodes with OpenStreetMap Nominatim, and automatically populates the readable address. If denied or failed, leaves the field empty with a clear message and never uses fake/default locations.
+  - **Google Maps Integration**: Saves coordinates with every complaint and provides **"Open in Maps"** links (`https://www.google.com/maps?q=lat,lng`) directly on public Track and Admin complaint cards.
   - **Snap-to-Fill with Gemini Vision**: Citizens upload an image and click **"Analyze photo with AI"** to automatically populate title, description, and municipal category before submission. Citizens can edit before submitting.
-  - Auto-geolocation tagging with browser Geolocation API.
   - Image upload with instant preview and base64 transmission to Gemini vision-language capabilities.
   - Strict JSON schema enforcement via `@google/genai` returning category, priority, **Severity Score (1-10)**, and **Estimated Resolution Time** (e.g. "24-48 hours", "2-6 hours").
   - Generated Tracking ID (e.g., `CR-1042`) with 1-click clipboard copy.
