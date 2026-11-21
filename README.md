@@ -29,30 +29,35 @@ In urban municipalities and smart cities, citizen grievance redressal is severel
 
 ## 🚀 3. Key Features
 
-- **Multimodal AI Citizen Grievance Portal**:
+- **Multimodal AI Citizen Grievance Portal & Snap-to-Fill**:
+  - **Snap-to-Fill with Gemini Vision**: Citizens upload an image and click **"Analyze photo with AI"** to automatically populate title, description, and municipal category before submission. Citizens can edit before submitting.
   - Auto-geolocation tagging with browser Geolocation API.
   - Image upload with instant preview and base64 transmission to Gemini vision-language capabilities.
-  - Strict JSON schema enforcement via `@google/genai`.
+  - Strict JSON schema enforcement via `@google/genai` returning category, priority, **Severity Score (1-10)**, and **Estimated Resolution Time** (e.g. "24-48 hours", "2-6 hours").
   - Generated Tracking ID (e.g., `CR-1042`) with 1-click clipboard copy.
 
-- **Resilient AI Execution & Graceful Fallback**:
+- **Resilient AI Execution & Multi-Model Graceful Fallback**:
   - Connects to Google Gemini API via official `@google/genai` SDK using `VITE_GEMINI_API_KEY` and `VITE_GEMINI_MODEL` (`gemini-flash-lite-latest`).
-  - **Zero-Crash Heuristic Mock Engine**: If no API key is configured or network quota limits are hit, the system seamlessly activates an embedded keyword-based municipal classifier.
+  - **Zero-Crash Heuristic Mock Engine**: If no API key is configured or network quota limits are hit, the system seamlessly activates an embedded keyword-based municipal classifier that also provides severity scores, resolution times, and vision fallback.
+  - 15s timeout with automatic retry on 503 / timeout.
   - UI visual badges distinguish `Gemini Active` vs. `Mock AI mode`.
 
-- **Public Tracking & Filter Dashboard**:
+- **Public Tracking, Citizen "Me Too" Upvotes & Filters**:
   - Real-time KPI counters (`Total Filed`, `Reported`, `In Progress`, `Resolved`).
-  - Multi-parameter search by Tracking ID, locality keywords, or department name.
-  - Color-coded priority badges and interactive 3-step progress steppers.
+  - **Citizen "Me Too" Upvotes**: Citizens can upvote existing complaints (strictly 1 vote per browser, persisted in `localStorage`) to signal collective impact.
+  - **Sorting Options**: Sort by "Newest first", **"Most upvoted"**, or "Highest priority".
+  - Color-coded priority badges, severity score badges (`8/10`), and estimated resolution times.
+  - **Auditable Progress Stepper**: Interactive 3-step progress steppers (`Reported` ➔ `In Progress` ➔ `Resolved`) displaying **timestamps for every status change** alongside official municipal dispatch notes.
   - Pre-seeded with 6 realistic Coimbatore civic complaints (Peelamedu, RS Puram, Gandhipuram, Singanallur, Saravanampatti).
 
-- **Municipal Admin Dashboard (Judge PIN: `admin123`)**:
-  - Demo PIN gate with 1-click judge bypass for rapid hackathon evaluation.
+- **Municipal Operations Center & AI Daily Dispatch**:
+  - **AI Daily Dispatch Summary**: Municipal commanders can trigger 1-click AI dispatch directive that aggregates all open High/Critical complaints and synthesizes an actionable operational directive grouped by department with recommended crew and equipment.
+  - Secured Judge PIN gate (`admin123`) with 1-click bypass.
   - Departmental workload allocation metrics.
-  - Real-time status toggling and official municipal dispatch note publishing that immediately updates the citizen tracking view.
+  - Real-time status toggling and official municipal dispatch note publishing that immediately updates the citizen tracking view with timestamps.
 
 - **Runtime In-Browser AI Configuration**:
-  - Settings modal (gear icon) allowing judges or evaluators to enter their own Google Gemini API key and select models directly in `localStorage` without altering environment files.
+  - Settings modal (gear icon) allowing judges or evaluators to enter their own Google Gemini API key and select models (`gemini-flash-lite-latest`, `gemini-3.8-flash`, etc.) directly in `localStorage` without altering environment files.
 
 ---
 
@@ -113,23 +118,28 @@ Open your browser at `http://localhost:5173`.
 
 ## 🎯 7. Quick Demo & Evaluation Guide for Judges
 
-1. **Explore Existing Seed Complaints**:
+1. **Explore Existing Seed Complaints & "Me Too" Upvoting**:
    - Go to the **Track Issues** tab.
    - Review pre-loaded Coimbatore civic issues (e.g. `CR-1042` pothole on Avinashi Road, `CR-1045` water pipeline burst on Trichy Road).
-   - Test filters (e.g., select status `Reported` or filter by `Critical` priority).
-2. **File a New Citizen Complaint**:
+   - Observe **Severity Score** (e.g. `8/10`), **Est. Resolution** (e.g. `24-48 hours`), and **timestamps on each progress step** along with official admin notes.
+   - Click the **"Me Too"** button on any card to register your citizen upvote; observe the vote count increase and button state switch to "Supported" (persisted in `localStorage`).
+   - Switch the sort dropdown to **"Most upvoted"** to see complaints re-ordered by community impact.
+
+2. **File a New Citizen Complaint with Snap-to-Fill**:
    - Navigate to **Report Issue**.
    - Click **Use My Location** (auto-populates Coimbatore coordinates).
-   - Enter a title like *"Live electric wire sparking near bus stop"* and description *"Heavy rain caused wire to snap and spark onto the pavement."*
-   - Leave Category on *"Auto-detect with AI"* and click **Submit & AI Triage Issue**.
-   - Observe the instant AI triage card with assigned department (*Electricity Board / Police*), priority (*Critical*), and reasoning.
-3. **Admin Dispatch & Resolution**:
+   - Test **Snap-to-Fill**: Upload any civic damage image and click **"Analyze photo with AI"**.
+   - Watch Gemini Vision auto-populate the Title, Description, and Category! Edit any field to customize before submitting.
+   - Click **Submit & AI Triage Issue**.
+   - Observe the instant AI triage card with assigned department (*Electricity Board / Police*), priority, severity score, estimated resolution time, and impact reasoning.
+
+3. **Admin Operations & AI Daily Dispatch Summary**:
    - Click on the **Admin** tab.
    - Click the yellow **1-Click Instant Judge Login** button (or enter PIN `admin123`).
-   - Find your newly created complaint.
-   - Change Status from `Reported` to `In Progress` or `Resolved`.
-   - Add an official note: *"Linemen team dispatched. Wire isolated at 08:45 AM."* and click **Save Note**.
-   - Switch back to **Track Issues** and see your changes updated in real time with the updated 3-step progress bar!
+   - Click **"AI Daily Dispatch Summary"** in the top right to generate a prioritized operational action plan for all open High/Critical complaints grouped by department.
+   - Review or copy the departmental dispatch directive.
+   - Update any complaint's Status (e.g., from `Reported` to `In Progress`) or add an Official Note.
+   - Switch back to **Track Issues** and observe the live timestamp and updated admin note on that specific stage in the 3-step progress stepper!
 
 ---
 
