@@ -13,7 +13,8 @@ import {
   FileText,
   Copy,
   Check,
-  ExternalLink
+  ExternalLink,
+  Info
 } from 'lucide-react';
 import { triageIssueWithGemini, analyzePhotoWithGemini } from '../services/geminiService';
 
@@ -32,6 +33,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [coords, setCoords] = useState(null);
+  const [locationNote, setLocationNote] = useState('');
   const [category, setCategory] = useState('Auto-detect with AI');
   const [imagePreview, setImagePreview] = useState(null);
   
@@ -43,17 +45,46 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   const [isAnalyzingPhoto, setIsAnalyzingPhoto] = useState(false);
   const [snapSuccess, setSnapSuccess] = useState('');
 
-  // Geolocation handler with OpenStreetMap Nominatim reverse geocoding
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      setValidationError("Couldn't get your location, please type it");
+  // IP-based approximate location lookup fallback using ipwho.is
+  const fetchIpLocation = async () => {
+    try {
+      const response = await fetch('https://ipwho.is/');
+      if (!response.ok) {
+        throw new Error(`ipwho.is returned HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      if (data && data.success !== false && (data.city || data.region)) {
+        const parts = [data.city, data.region].filter(Boolean);
+        const locString = parts.length > 0 ? `${parts.join(', ')} (approximate)` : "Approximate location";
+        setLocation(locString);
+        if (typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+          setCoords({ lat: data.latitude, lng: data.longitude });
+        }
+        setLocationNote("Approximate location - please refine if needed");
+        setValidationError('');
+        return true;
+      }
+      throw new Error("ipwho.is payload missing location details");
+    } catch (err) {
+      console.warn("IP geolocation fallback failed:", err);
       setLocation('');
       setCoords(null);
-      return;
+      setLocationNote('');
+      setValidationError("Couldn't get your location, please type it");
+      return false;
     }
+  };
 
+  // Geolocation handler with OpenStreetMap Nominatim reverse geocoding and ipwho.is fallback
+  const handleGetLocation = () => {
     setIsLocating(true);
     setValidationError('');
+    setLocationNote('');
+
+    if (!navigator.geolocation) {
+      fetchIpLocation().finally(() => setIsLocating(false));
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -70,27 +101,24 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
           const data = await response.json();
           if (data && data.display_name) {
             setLocation(data.display_name);
+            setLocationNote('');
             setValidationError('');
-          } else {
-            throw new Error("No address found in reverse geocoding response");
+            setIsLocating(false);
+            return;
           }
+          throw new Error("No address found in reverse geocoding response");
         } catch (error) {
-          console.warn("Reverse geocode lookup error:", error);
-          setLocation('');
-          setCoords(null);
-          setValidationError("Couldn't get your location, please type it");
-        } finally {
+          console.warn("Reverse geocode failed, attempting IP fallback...", error);
+          await fetchIpLocation();
           setIsLocating(false);
         }
       },
-      (error) => {
-        console.warn("Geolocation permission error:", error);
-        setLocation('');
-        setCoords(null);
-        setValidationError("Couldn't get your location, please type it");
+      async (error) => {
+        console.warn("navigator.geolocation failed, attempting IP fallback...", error);
+        await fetchIpLocation();
         setIsLocating(false);
       },
-      { timeout: 10000, enableHighAccuracy: true }
+      { timeout: 7000, enableHighAccuracy: false }
     );
   };
 
@@ -210,6 +238,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
       setDescription('');
       setLocation('');
       setCoords(null);
+      setLocationNote('');
       setCategory('Auto-detect with AI');
       setImagePreview(null);
 
@@ -401,7 +430,10 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                   type="text"
                   placeholder="e.g. Avinashi Road, Peelamedu, Coimbatore"
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    if (locationNote) setLocationNote('');
+                  }}
                   className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-900 placeholder-slate-400 text-sm shadow-sm"
                 />
               </div>
@@ -410,7 +442,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                 data-testid="use-location-btn"
                 onClick={handleGetLocation}
                 disabled={isLocating}
-                className="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm flex items-center space-x-1.5 transition-colors border border-slate-200"
+                className="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm flex items-center space-x-1.5 transition-colors border border-slate-200 cursor-pointer disabled:opacity-70"
               >
                 {isLocating ? (
                   <>
@@ -425,6 +457,12 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                 )}
               </button>
             </div>
+            {locationNote && (
+              <p data-testid="location-note" className="text-xs text-amber-700 font-medium mt-1.5 flex items-center space-x-1 animate-fadeIn">
+                <Info className="w-3.5 h-3.5 flex-shrink-0 text-amber-600" />
+                <span>{locationNote}</span>
+              </p>
+            )}
           </div>
 
           {/* Category Dropdown */}
