@@ -2,7 +2,7 @@
 
 AI-Powered Civic Issue Reporting & Municipal Triage Platform built for the **PromptWars 2026** Hackathon at PSG iTech (in collaboration with GDG on Campus PSG iTech).
 
-![CivicResolve Platform](https://img.shields.io/badge/Status-Production%20Ready-emerald)
+![CivicResolve Platform](https://img.shields.io/badge/Status-Prototype-amber)
 ![AI-Powered](https://img.shields.io/badge/AI-Google%20Gemini%20Flash--Lite-indigo)
 ![Built-with](https://img.shields.io/badge/Built%20with-Google%20Antigravity-sky)
 ![Single Branch](https://img.shields.io/badge/Branch-main%20only-blue)
@@ -21,7 +21,7 @@ In urban municipalities and smart cities, citizen grievance redressal is severel
 ## 💡 2. The CivicResolve Solution
 **CivicResolve** transforms civic grievance reporting into an instantaneous, AI-directed municipal workflow:
 1. **Citizen Submissions with Multimodal Analysis**: Citizens report issues using natural language, geolocation, and photos.
-2. **Instant Gemini AI Triage**: Within 1.2 seconds, Google Gemini classifies the issue into one of 6 official municipal categories, assigns an objective priority level (*Low*, *Medium*, *High*, *Critical*), routes it to the specific municipal agency, and synthesizes a 1–2 sentence civic impact reasoning.
+2. **Instant Gemini AI Triage**: Google Gemini classifies the issue into one of 6 official municipal categories, assigns an objective priority level (*Low*, *Medium*, *High*, *Critical*), routes it to the specific municipal agency, and synthesizes a 1–2 sentence civic impact reasoning.
 3. **Public Transparency & Tracking**: A public real-time dashboard with search, status filters, and visual 3-step resolution progress trackers (`Reported` ➔ `In Progress` ➔ `Resolved`).
 4. **Municipal Official Command Center**: Secured administrative console for ward officers to inspect AI triages, update operational statuses, reassign departments, and publish official site notes.
 
@@ -77,7 +77,7 @@ In urban municipalities and smart cities, citizen grievance redressal is severel
 - **Google Gemini**:
   - Acts as the cognitive triage engine. It analyzes natural language citizen descriptions alongside photo evidence, detecting spatial hazards, estimating municipal liability, and producing structured JSON metadata for department routing.
 - **Google Antigravity**:
-  - Used as the agentic coding environment to scaffold, implement, debug, and package the complete full-stack civic application in a rapid 30-minute session.
+  - Used as the agentic coding environment to scaffold, implement, debug, and package the complete civic web app in a rapid 30-minute session.
   - Managed single-branch Git discipline, automated package integration, and ensured strict conformance to hackathon submission requirements.
 
 ---
@@ -109,6 +109,9 @@ VITE_GEMINI_MODEL=gemini-flash-lite-latest
 \`\`\`
 *(Alternatively, you can just start the app and paste your API key into the Settings modal via the gear icon in the top navigation bar!)*
 
+> [!NOTE] **API Key Security Note for Hackathon Evaluators / Judges**
+> Environment variables prefixed with `VITE_` are bundled directly into client-side browser code at build and runtime. This design is standard and intentional for a client-side hackathon prototype and zero-backend demo (allowing judges to easily evaluate the app or test their own key via the in-browser Settings modal). In a production environment, API requests would be routed through an authenticated backend proxy or serverless function to keep API keys secure and off the client.
+
 ### 3. Start Development Server
 \`\`\`bash
 npm run dev
@@ -128,7 +131,7 @@ Open your browser at `http://localhost:5173`.
 
 2. **File a New Citizen Complaint with Snap-to-Fill**:
    - Navigate to **Report Issue**.
-   - Click **Use My Location** (auto-populates Coimbatore coordinates).
+   - Click **Use My Location** (fills in your approximate location, or type it manually).
    - Test **Snap-to-Fill**: Upload any civic damage image and click **"Analyze photo with AI"**.
    - Watch Gemini Vision auto-populate the Title, Description, and Category! Edit any field to customize before submitting.
    - Click **Submit & AI Triage Issue**.
