@@ -148,8 +148,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+    <div className="min-h-screen flex flex-col bg-[#0b1220] text-slate-100 font-sans selection:bg-teal-500/30 selection:text-teal-200 relative">
       
+      {/* Background glow effects (teal & indigo radial glows) */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden" aria-hidden="true">
+        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[850px] h-[500px] bg-gradient-to-br from-teal-500/10 via-cyan-500/5 to-indigo-600/10 blur-3xl rounded-full" />
+        <div className="absolute top-[35%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/5 blur-3xl rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-teal-600/5 blur-3xl rounded-full" />
+      </div>
+
       {/* Top Navigation */}
       <Navbar
         currentView={currentView}
@@ -168,6 +175,7 @@ export default function App() {
             apiKey={apiKey}
             modelName={modelName}
             existingComplaintIds={complaints.map((complaint) => complaint.id)}
+            complaints={complaints}
           />
         )}
 
@@ -203,13 +211,26 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
-          <div>
-            <strong>CivicResolve</strong> — AI-Powered Civic Issue Reporting & Triage Platform
+      <footer className="border-t border-white/[0.08] bg-slate-950/80 py-8 mt-16 text-xs text-slate-400">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-7 h-7 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold text-xs">
+              CR
+            </div>
+            <div>
+              <p className="font-semibold text-slate-200">CivicResolve Municipal Platform</p>
+              <p className="text-[11px] text-slate-500">Autonomous Grievance Redressal & Intelligent Dispatch</p>
+            </div>
           </div>
-          <div>
-            Built with <strong>Google Gemini</strong> on <strong>Google Antigravity</strong> • PromptWars 2026
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[11px] text-slate-400">
+            <span>Built for <strong>PromptWars 2026</strong></span>
+            <span className="text-slate-700">•</span>
+            <span>Powered by <strong>Google Gemini</strong></span>
+            <span className="text-slate-700">•</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-900 border border-white/[0.08] text-slate-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+              Demo Helpline: 1800-000-DEMO (Simulated)
+            </span>
           </div>
         </div>
       </footer>
