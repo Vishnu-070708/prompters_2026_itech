@@ -317,6 +317,18 @@ async function runVerification() {
     record('7. Real Geolocation, IP Fallback & Open in Maps', false, e.message);
   }
 
+  // Test 8: Browser suite selectors match the current stepper and exercise Snap-to-Fill.
+  try {
+    const e2eCode = fs.readFileSync(path.join(ROOT, 'scripts/e2e-test.mjs'), 'utf-8');
+    const currentStepperSelector = e2eCode.includes('.max-w-2xl.mx-auto .rounded-full');
+    const testsSnapToFill = e2eCode.includes('Analyze photo with AI') && e2eCode.includes('Snap-to-Fill did not populate');
+
+    record('8. E2E Stepper & Snap-to-Fill Coverage', currentStepperSelector && testsSnapToFill,
+      `current stepper selector: ${currentStepperSelector}, Snap-to-Fill exercised: ${testsSnapToFill}`);
+  } catch (e) {
+    record('8. E2E Stepper & Snap-to-Fill Coverage', false, e.message);
+  }
+
   console.log('\n========================================');
   const allPassed = testResults.every(r => r.pass);
   console.log(`OVERALL RESULT: ${allPassed ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}`);

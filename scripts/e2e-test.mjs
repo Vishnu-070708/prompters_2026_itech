@@ -193,9 +193,33 @@ async function runTests() {
       const previewImg = await page.$('img[alt="Issue preview"]');
       if (!previewImg) throw new Error('Photo preview did not appear');
 
-      await page.type('input[placeholder*="Dangerous 2-foot pothole"]', 'Open manhole with missing cover slab');
-      await page.type('textarea', 'Sidewalk manhole missing cover causing extreme hazard for pedestrians.');
-      await page.type('input[placeholder*="Avinashi Road"]', 'Singanallur, Coimbatore');
+      const analyzeBtn = await page.waitForSelector('button ::-p-text(Analyze photo with AI)');
+      await analyzeBtn.click();
+      await page.waitForFunction(() => {
+        const title = document.querySelector('input[placeholder*="Dangerous 2-foot pothole"]');
+        const description = document.querySelector('textarea');
+        const category = document.querySelector('select');
+        return Boolean(title?.value && description?.value && category?.value !== 'Auto-detect with AI');
+      }, { timeout: 35000 });
+
+      const snapToFillWorked = await page.evaluate(() => {
+        const title = document.querySelector('input[placeholder*="Dangerous 2-foot pothole"]');
+        const description = document.querySelector('textarea');
+        const category = document.querySelector('select');
+        return Boolean(title?.value && description?.value && category?.value !== 'Auto-detect with AI');
+      });
+      if (!snapToFillWorked) throw new Error('Snap-to-Fill did not populate the editable form fields');
+
+      await page.evaluate(() => {
+        const setValue = (element, value) => {
+          const setter = Object.getOwnPropertyDescriptor(element instanceof HTMLTextAreaElement ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype, 'value').set;
+          setter.call(element, value);
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+        setValue(document.querySelector('input[placeholder*="Dangerous 2-foot pothole"]'), 'Open manhole with missing cover slab');
+        setValue(document.querySelector('textarea'), 'Sidewalk manhole missing cover causing extreme hazard for pedestrians.');
+        setValue(document.querySelector('input[placeholder*="Avinashi Road"]'), 'Singanallur, Coimbatore');
+      });
 
       const submit = await page.waitForSelector('button[type="submit"]');
       await submit.click();
@@ -204,7 +228,7 @@ async function runTests() {
       const photoComplaintId = await page.$eval('span.font-mono.text-sky-700', el => el.textContent);
       submittedIds.push(photoComplaintId);
 
-      record('2. Photo Upload & Submission', 'PASS', `Photo preview rendered and submitted with ID ${photoComplaintId}`);
+      record('2. Photo Upload, Snap-to-Fill & Submission', 'PASS', `Photo preview rendered, Snap-to-Fill populated editable fields, and report submitted with ID ${photoComplaintId}`);
 
     } catch (e) {
       record('2. Photo Upload & Submission', 'FAIL', e.message);
@@ -264,7 +288,7 @@ async function runTests() {
       await new Promise(r => setTimeout(r, 500));
 
       const hasStepper = await page.evaluate(() => {
-        const steps = document.querySelectorAll('.max-w-xl.mx-auto .rounded-full');
+        const steps = document.querySelectorAll('.max-w-2xl.mx-auto .rounded-full');
         return steps.length >= 3;
       });
 
