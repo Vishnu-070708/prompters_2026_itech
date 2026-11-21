@@ -150,6 +150,21 @@ async function runVerification() {
     record('3A. Unique Tracking ID Generation', false, e.message);
   }
 
+  // Test 3B: uploaded photos are compressed before storage and quota failures stay visible to the citizen.
+  try {
+    const compressionCode = fs.readFileSync(path.join(ROOT, 'src/utils/imageCompression.js'), 'utf-8');
+    const reportViewCode = fs.readFileSync(path.join(ROOT, 'src/components/ReportView.jsx'), 'utf-8');
+    const appCode = fs.readFileSync(path.join(ROOT, 'src/App.jsx'), 'utf-8');
+    const compressesForStorage = compressionCode.includes('MAX_WIDTH = 800') && compressionCode.includes('JPEG_QUALITY = 0.7') && compressionCode.includes("toDataURL('image/jpeg', JPEG_QUALITY)");
+    const blocksFalseSuccess = reportViewCode.includes('const wasSaved = onComplaintAdded(newComplaint)') && reportViewCode.includes('browser storage is full');
+    const catchesQuotaFailure = appCode.includes('Failed to persist new complaint in localStorage') && appCode.includes('return false');
+
+    record('3B. Photo Storage Safety', compressesForStorage && blocksFalseSuccess && catchesQuotaFailure,
+      `compression: ${compressesForStorage}, quota feedback: ${blocksFalseSuccess}, failed save blocked: ${catchesQuotaFailure}`);
+  } catch (e) {
+    record('3B. Photo Storage Safety', false, e.message);
+  }
+
   // Test 4: Admin AI Daily Dispatch Summary
   try {
     const { mockDailyDispatchSummary, generateDailyDispatchSummary } = await import('../src/services/geminiService.js');

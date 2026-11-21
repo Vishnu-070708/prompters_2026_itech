@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { triageIssueWithGemini, analyzePhotoWithGemini } from '../services/geminiService';
 import { generateTrackingId } from '../utils/trackingId';
+import { compressImageForStorage } from '../utils/imageCompression';
 
 const CATEGORIES = [
   "Auto-detect with AI",
@@ -124,21 +125,30 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   };
 
   // Image Upload handler
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setImagePreview(null);
+      setValidationError('Please upload a PNG, JPG, or WEBP photo.');
+      return;
+    }
 
     if (file.size > 4 * 1024 * 1024) {
       setValidationError("Photo must be smaller than 4 MB.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
+    try {
+      const compressedImage = await compressImageForStorage(file);
+      setImagePreview(compressedImage);
       setValidationError('');
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Photo compression failed:', err);
+      setImagePreview(null);
+      setValidationError('Unable to prepare this photo. Please try a different image.');
+    }
   };
 
   const handleRemoveImage = () => {
@@ -231,7 +241,11 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         ]
       };
 
-      onComplaintAdded(newComplaint);
+      const wasSaved = onComplaintAdded(newComplaint);
+      if (!wasSaved) {
+        setValidationError('Your report could not be saved because browser storage is full. Remove the photo or clear older demo reports, then try again.');
+        return;
+      }
       setSubmissionResult(newComplaint);
 
       // Reset form fields

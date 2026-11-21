@@ -50,10 +50,19 @@ export default function App() {
 
   // Handler to add a new complaint
   const handleAddComplaint = (newComplaint) => {
-    setComplaints((prev) => [newComplaint, ...prev]);
+    const nextComplaints = [newComplaint, ...complaints];
+    try {
+      localStorage.setItem('civic_complaints_data', JSON.stringify(nextComplaints));
+    } catch (err) {
+      console.warn("Failed to persist new complaint in localStorage:", err);
+      return false;
+    }
+
+    setComplaints(nextComplaints);
     if (newComplaint.aiMode) {
       setLastAnsweredModel(newComplaint.aiMode);
     }
+    return true;
   };
 
   // Handler for admin updating a complaint
