@@ -1,5 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
-
 /**
  * EDITABLE MODEL FALLBACK LIST (Order of Priority):
  * Edit models here in one place. The engine tries VITE_GEMINI_MODEL
@@ -134,6 +132,10 @@ const DISPATCH_SUMMARY_SCHEMA = {
 // In-memory + sessionStorage cache for whichever model worked for the session
 let inMemoryCachedWorkingModel = null;
 
+/**
+ * Retrieve the active cached working model for the current browser session.
+ * @returns {string|null} Cached model name or null if none cached.
+ */
 export function getCachedWorkingModel() {
   if (inMemoryCachedWorkingModel) return inMemoryCachedWorkingModel;
   try {
@@ -150,6 +152,10 @@ export function getCachedWorkingModel() {
   return null;
 }
 
+/**
+ * Cache the currently successful model in memory and session storage.
+ * @param {string} modelName - Model name that succeeded.
+ */
 export function setCachedWorkingModel(modelName) {
   inMemoryCachedWorkingModel = modelName;
   try {
@@ -168,10 +174,14 @@ export function setCachedWorkingModel(modelName) {
 
 /**
  * Keyword-based fallback classifier when all models/retries fail or no key is provided.
+ * @param {string} title - Complaint title.
+ * @param {string} description - Detailed complaint description.
+ * @param {string} [reason="Local Heuristic"] - Operational trigger reason for fallback.
+ * @returns {object} Triaged complaint classification payload.
  */
 export function mockClassifyIssue(title, description, reason = "Local Heuristic") {
   const text = `${title} ${description}`.toLowerCase();
-  
+
   let category = "Other";
   let priority = "Medium";
   let recommendedDepartment = "General Administration";
@@ -278,7 +288,7 @@ function cleanJsonOutput(text) {
  */
 async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, responseSchema = RESPONSE_SCHEMA, temperature = 0.1, timeoutMs = 15000 }) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort(new Error(`Timeout: ${model} call exceeded ${timeoutMs / 1000}s`));
@@ -376,6 +386,15 @@ async function callWithRetry({ apiKey, model, systemPrompt, userPrompt, imageBas
  * 3. On 503/timeout, retries once after 2 seconds
  * 4. Caches working model for the session
  * 5. Falls back to keyword mock if all models fail
+ * @param {object} params - Triage request options.
+ * @param {string} params.title - Citizen complaint title.
+ * @param {string} params.description - Citizen complaint details.
+ * @param {string} [params.location] - Location or landmark.
+ * @param {string} [params.selectedCategory] - Optional category suggestion.
+ * @param {string} [params.imageBase64] - Optional base64 image data.
+ * @param {string} [params.apiKey] - Optional custom Gemini API key.
+ * @param {string} [params.modelName] - Optional custom Gemini model.
+ * @returns {Promise<object>} Structured triage assessment.
  */
 export async function triageIssueWithGemini({ title, description, location, selectedCategory, imageBase64, apiKey, modelName }) {
   const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
@@ -439,7 +458,6 @@ User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
   // Iterate through fallback models
   for (const modelToTry of candidateModels) {
     try {
-      console.log(`CivicResolve: Attempting triage with model: ${modelToTry}`);
       const parsed = await callWithRetry({
         apiKey: key.trim(),
         model: modelToTry,
@@ -450,7 +468,6 @@ User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
 
       // Cache this working model for the session
       setCachedWorkingModel(modelToTry);
-      console.log(`CivicResolve: Successfully triaged using: ${modelToTry}`);
 
       const category = CATEGORIES.includes(parsed.category) ? parsed.category : "Other";
       const priority = PRIORITIES.includes(parsed.priority) ? parsed.priority : "Medium";
@@ -496,6 +513,8 @@ User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
 
 /**
  * Mock fallback for photo analysis (Snap-to-Fill)
+ * @param {string} [reason="Local Heuristic"] - Trigger reason for mock vision analysis.
+ * @returns {object} Synthetic verified photo analysis.
  */
 export function mockAnalyzePhoto(reason = "Local Heuristic") {
   return {
@@ -515,6 +534,11 @@ export function mockAnalyzePhoto(reason = "Local Heuristic") {
 /**
  * Snap-to-Fill: Analyzes uploaded photo using Gemini Vision to verify and extract
  * title, description, and category. Validates first before classifying.
+ * @param {object} params - Photo analysis parameters.
+ * @param {string} params.imageBase64 - Base64-encoded image string.
+ * @param {string} [params.apiKey] - Optional custom Gemini API key.
+ * @param {string} [params.modelName] - Optional custom Gemini model.
+ * @returns {Promise<object>} Image verification and resident-style metadata.
  */
 export async function analyzePhotoWithGemini({ imageBase64, apiKey, modelName }) {
   const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
@@ -557,7 +581,6 @@ Return ONLY valid JSON in this shape:
 
   for (const modelToTry of candidateModels) {
     try {
-      console.log(`CivicResolve: Attempting Snap-to-Fill photo analysis with: ${modelToTry}`);
       const parsed = await callWithRetry({
         apiKey: key.trim(),
         model: modelToTry,
@@ -641,6 +664,9 @@ Return ONLY valid JSON in this shape:
 
 /**
  * Mock fallback for AI Daily Dispatch Summary
+ * @param {Array<object>} openComplaints - Open critical/high complaints.
+ * @param {string} [reason="Local Heuristic"] - Trigger reason for fallback.
+ * @returns {object} Synthetic daily municipal emergency dispatch plan.
  */
 export function mockDailyDispatchSummary(openComplaints, reason = "Local Heuristic") {
   const grouped = {};
@@ -693,6 +719,11 @@ export function mockDailyDispatchSummary(openComplaints, reason = "Local Heurist
 /**
  * AI Daily Dispatch Summary: sends all open High/Critical complaints to Gemini
  * and returns an action plan grouped by department.
+ * @param {object} params - Dispatch generation parameters.
+ * @param {Array<object>} params.complaints - Current complaint registry.
+ * @param {string} [params.apiKey] - Optional custom Gemini API key.
+ * @param {string} [params.modelName] - Optional custom Gemini model.
+ * @returns {Promise<object>} Municipal daily dispatch directive.
  */
 export async function generateDailyDispatchSummary({ complaints, apiKey, modelName }) {
   const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
@@ -702,7 +733,7 @@ export async function generateDailyDispatchSummary({ complaints, apiKey, modelNa
   const configuredModel = modelName || envModel || "gemini-flash-lite-latest";
 
   // Filter for open high/critical complaints
-  const openHighCritical = (complaints || []).filter(c => 
+  const openHighCritical = (complaints || []).filter(c =>
     c.status !== "Resolved" && (c.priority === "High" || c.priority === "Critical")
   );
 
@@ -747,7 +778,7 @@ departments: Array of objects, each containing:
   - complaintIds: Array of complaint IDs (e.g. ["CR-1042", "CR-1045"])
   - recommendedCrew: Equipment/personnel needed (e.g. "JCB + PWD Asphalt Patching Unit")`;
 
-  const complaintsList = openHighCritical.map(c => 
+  const complaintsList = openHighCritical.map(c =>
     `[${c.id}] ${c.title} | Priority: ${c.priority} | Severity: ${c.severityScore || 'N/A'}/10 | Dept: ${c.recommendedDepartment} | Location: ${c.location} | Details: ${c.description}`
   ).join("\n");
 
@@ -757,7 +788,6 @@ departments: Array of objects, each containing:
 
   for (const modelToTry of candidateModels) {
     try {
-      console.log(`CivicResolve: Generating daily dispatch summary with: ${modelToTry}`);
       const parsed = await callWithRetry({
         apiKey: key.trim(),
         model: modelToTry,
@@ -770,13 +800,13 @@ departments: Array of objects, each containing:
       const knownComplaintIds = new Set(openHighCritical.map((complaint) => complaint.id));
       const departments = Array.isArray(parsed.departments)
         ? parsed.departments.slice(0, CATEGORIES.length).filter((department) => department && typeof department === 'object').map((department) => ({
-            department: clampText(department.department, 'General Administration', 80),
-            actionPlan: clampText(department.actionPlan, 'Inspect and address assigned open civic issues.', 500),
-            complaintIds: Array.isArray(department.complaintIds)
-              ? department.complaintIds.filter((id) => knownComplaintIds.has(id)).slice(0, openHighCritical.length)
-              : [],
-            recommendedCrew: clampText(department.recommendedCrew, 'Rapid Response Municipal Unit', 160)
-          }))
+          department: clampText(department.department, 'General Administration', 80),
+          actionPlan: clampText(department.actionPlan, 'Inspect and address assigned open civic issues.', 500),
+          complaintIds: Array.isArray(department.complaintIds)
+            ? department.complaintIds.filter((id) => knownComplaintIds.has(id)).slice(0, openHighCritical.length)
+            : [],
+          recommendedCrew: clampText(department.recommendedCrew, 'Rapid Response Municipal Unit', 160)
+        }))
         : [];
 
       return {

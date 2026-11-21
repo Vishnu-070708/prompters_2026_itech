@@ -7,18 +7,12 @@ import {
   Building2, 
   Sparkles, 
   CheckCircle2, 
-  CircleDot, 
   AlertTriangle, 
-  Eye, 
   MessageSquare,
-  FileCheck2,
   ThumbsUp,
-  ArrowUpDown,
   ExternalLink,
   Activity,
-  PlusCircle,
-  TrendingUp,
-  ShieldAlert
+  PlusCircle
 } from 'lucide-react';
 
 const STATUS_STAGES = ["Reported", "In Progress", "Resolved"];
@@ -84,7 +78,7 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
   const filteredComplaints = useMemo(() => {
     return complaints.filter(item => {
       const query = searchQuery.toLowerCase().trim();
-      const matchesSearch = !query || 
+      const matchesSearch = !query ||
         item.id.toLowerCase().includes(query) ||
         item.title.toLowerCase().includes(query) ||
         item.description.toLowerCase().includes(query) ||
@@ -181,7 +175,7 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-7 animate-fade-in text-slate-100">
-      
+
       {/* Top Banner: Service Requests Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -207,52 +201,48 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
 
       {/* STATS BAR */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div 
+        <div
           onClick={() => setStatusFilter('All')}
-          className={`p-5 rounded-2xl border transition-all cursor-pointer backdrop-blur-sm ${
-            statusFilter === 'All' 
-              ? 'bg-slate-900 border-teal-500/60 ring-1 ring-teal-500/50 shadow-glow-teal' 
-              : 'bg-slate-900/80 border-white/[0.08] hover:border-white/[0.18]'
-          }`}
+          className={`p-5 rounded-2xl border transition-all cursor-pointer backdrop-blur-sm ${statusFilter === 'All'
+            ? 'bg-slate-900 border-teal-500/60 ring-1 ring-teal-500/50 shadow-glow-teal'
+            : 'bg-slate-900/80 border-white/[0.08] hover:border-white/[0.18]'
+            }`}
         >
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Filed</span>
           <span className="text-3xl font-extrabold text-slate-100 mt-1 block">{stats.total}</span>
           <span className="text-xs text-teal-400 font-medium mt-1 inline-block">All municipal reports</span>
         </div>
 
-        <div 
+        <div
           onClick={() => setStatusFilter('Reported')}
-          className={`p-5 rounded-2xl border transition-all cursor-pointer backdrop-blur-sm ${
-            statusFilter === 'Reported' 
-              ? 'bg-slate-900 border-amber-500/60 ring-1 ring-amber-500/50 shadow-md shadow-amber-500/10' 
-              : 'bg-slate-900/80 border-white/[0.08] hover:border-white/[0.18]'
-          }`}
+          className={`p-5 rounded-2xl border transition-all cursor-pointer backdrop-blur-sm ${statusFilter === 'Reported'
+            ? 'bg-slate-900 border-amber-500/60 ring-1 ring-amber-500/50 shadow-md shadow-amber-500/10'
+            : 'bg-slate-900/80 border-white/[0.08] hover:border-white/[0.18]'
+            }`}
         >
           <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Reported</span>
           <span className="text-3xl font-extrabold text-amber-400 mt-1 block">{stats.reported}</span>
           <span className="text-xs text-slate-400 font-medium mt-1 inline-block">Awaiting field crew</span>
         </div>
 
-        <div 
+        <div
           onClick={() => setStatusFilter('In Progress')}
-          className={`p-5 rounded-2xl border transition-all cursor-pointer backdrop-blur-sm ${
-            statusFilter === 'In Progress' 
-              ? 'bg-slate-900 border-sky-500/60 ring-1 ring-sky-500/50 shadow-md shadow-sky-500/10' 
-              : 'bg-slate-900/80 border-white/[0.08] hover:border-white/[0.18]'
-          }`}
+          className={`p-5 rounded-2xl border transition-all cursor-pointer backdrop-blur-sm ${statusFilter === 'In Progress'
+            ? 'bg-slate-900 border-sky-500/60 ring-1 ring-sky-500/50 shadow-md shadow-sky-500/10'
+            : 'bg-slate-900/80 border-white/[0.08] hover:border-white/[0.18]'
+            }`}
         >
           <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider block">In Progress</span>
           <span className="text-3xl font-extrabold text-sky-400 mt-1 block">{stats.inProgress}</span>
           <span className="text-xs text-slate-400 font-medium mt-1 inline-block">Teams deployed on site</span>
         </div>
 
-        <div 
+        <div
           onClick={() => setStatusFilter('Resolved')}
-          className={`p-5 rounded-2xl border transition-all cursor-pointer backdrop-blur-sm ${
-            statusFilter === 'Resolved' 
-              ? 'bg-slate-900 border-emerald-500/60 ring-1 ring-emerald-500/50 shadow-md shadow-emerald-500/10' 
-              : 'bg-slate-900/80 border-white/[0.08] hover:border-white/[0.18]'
-          }`}
+          className={`p-5 rounded-2xl border transition-all cursor-pointer backdrop-blur-sm ${statusFilter === 'Resolved'
+            ? 'bg-slate-900 border-emerald-500/60 ring-1 ring-emerald-500/50 shadow-md shadow-emerald-500/10'
+            : 'bg-slate-900/80 border-white/[0.08] hover:border-white/[0.18]'
+            }`}
         >
           <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Resolved</span>
           <span className="text-3xl font-extrabold text-emerald-400 mt-1 block">{stats.resolved}</span>
@@ -266,9 +256,9 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
           <Filter className="h-3.5 w-3.5 text-teal-400" />
           <span>Filter & Search Registry</span>
         </div>
-        
+
         <div className="flex flex-col md:flex-row gap-3">
-          
+
           {/* Search Box */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
@@ -362,31 +352,31 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
           {sortedComplaints.map((item) => {
             const currentStageIndex = STATUS_STAGES.indexOf(item.status);
 
-            const priorityBorderColor = 
-              item.priority === 'Critical' ? 'border-l-red-500 shadow-[0_0_15px_-4px_rgba(239,68,68,0.25)]' : 
-              item.priority === 'High' ? 'border-l-orange-500' : 
-              item.priority === 'Medium' ? 'border-l-amber-500' : 'border-l-emerald-500';
+            const priorityBorderColor =
+              item.priority === 'Critical' ? 'border-l-red-500 shadow-[0_0_15px_-4px_rgba(239,68,68,0.25)]' :
+                item.priority === 'High' ? 'border-l-orange-500' :
+                  item.priority === 'Medium' ? 'border-l-amber-500' : 'border-l-emerald-500';
 
-            const statusChipStyle = 
+            const statusChipStyle =
               item.status === 'Resolved' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' :
-              item.status === 'In Progress' ? 'bg-sky-500/10 text-sky-300 border-sky-500/30' :
-              'bg-amber-500/10 text-amber-300 border-amber-500/30';
+                item.status === 'In Progress' ? 'bg-sky-500/10 text-sky-300 border-sky-500/30' :
+                  'bg-amber-500/10 text-amber-300 border-amber-500/30';
 
             return (
-              <div 
+              <div
                 key={item.id}
                 data-testid="complaint-card"
                 className={`bg-slate-900/90 rounded-2xl border border-white/[0.08] shadow-subtle-dark hover:shadow-2xl hover:border-white/[0.18] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden border-l-4 ${priorityBorderColor}`}
               >
                 <div className="p-5 sm:p-6 space-y-4">
-                  
+
                   {/* Card Header: Tracking ID + Badges + Date */}
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono font-extrabold text-sm sm:text-base text-cyan-300 bg-slate-950 px-2.5 py-1 rounded-lg border border-teal-500/30">
                         {item.id}
                       </span>
-                      
+
                       <span className={`text-xs px-2.5 py-0.5 rounded-full border ${statusChipStyle} font-bold`}>
                         {item.status}
                       </span>
@@ -417,18 +407,16 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
                         data-testid={`upvote-btn-${item.id}`}
                         onClick={() => handleUpvote(item.id)}
                         disabled={upvotedIds.includes(item.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm ${
-                          upvotedIds.includes(item.id)
-                            ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-glow-teal cursor-default'
-                            : 'bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-300 border border-white/[0.1] hover:border-teal-500/30 active:scale-95 cursor-pointer'
-                        }`}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm ${upvotedIds.includes(item.id)
+                          ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-glow-teal cursor-default'
+                          : 'bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-300 border border-white/[0.1] hover:border-teal-500/30 active:scale-95 cursor-pointer'
+                          }`}
                         title={upvotedIds.includes(item.id) ? "You have already upvoted this complaint" : "Click to upvote this issue (Me Too)"}
                       >
                         <ThumbsUp className={`w-3.5 h-3.5 ${upvotedIds.includes(item.id) ? 'text-teal-300 fill-teal-300' : 'text-slate-400'}`} />
                         <span>{upvotedIds.includes(item.id) ? 'Supported' : 'Me Too'}</span>
-                        <span className={`px-1.5 py-0.2 rounded-full text-[11px] font-extrabold ${
-                          upvotedIds.includes(item.id) ? 'bg-teal-500/30 text-teal-200' : 'bg-slate-800 text-slate-300'
-                        }`}>
+                        <span className={`px-1.5 py-0.2 rounded-full text-[11px] font-extrabold ${upvotedIds.includes(item.id) ? 'bg-teal-500/30 text-teal-200' : 'bg-slate-800 text-slate-300'
+                          }`}>
                           {item.upvotes || 0}
                         </span>
                       </button>
@@ -442,14 +430,14 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
 
                   {/* Body Content */}
                   <div className="flex flex-col lg:flex-row gap-5">
-                    
+
                     {/* Optional Image */}
                     {item.imageUrl && (
                       <div className="w-full lg:w-48 h-36 rounded-xl bg-slate-950 overflow-hidden flex-shrink-0 border border-white/[0.08]">
-                        <img 
-                          src={item.imageUrl} 
-                          alt={item.title} 
-                          className="w-full h-full object-cover hover:scale-105 transition-transform" 
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform"
                         />
                       </div>
                     )}
@@ -459,7 +447,7 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
                       <h3 className="text-base sm:text-lg font-bold text-slate-100 leading-snug">
                         {item.title}
                       </h3>
-                      
+
                       <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                         {item.description}
                       </p>
@@ -469,7 +457,7 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
                           <MapPin className="w-3.5 h-3.5 text-rose-400" />
                           <span className="font-medium text-slate-300">{item.location}</span>
                         </span>
-                        
+
                         <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-md bg-slate-950 border border-white/[0.06]">
                           <Building2 className="w-3.5 h-3.5 text-teal-400" />
                           <span className="font-medium text-teal-300">{item.recommendedDepartment}</span>
@@ -519,12 +507,12 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
                       Resolution Progress & Timestamps
                     </div>
                     <div className="relative max-w-2xl mx-auto">
-                      
+
                       {/* Background Bar */}
                       <div className="absolute top-4 left-10 right-10 h-1 bg-slate-800 -translate-y-1/2 z-0"></div>
-                      
+
                       {/* Active Progress Bar */}
-                      <div 
+                      <div
                         className="absolute top-4 left-10 h-1 bg-gradient-to-r from-teal-500 to-cyan-400 -translate-y-1/2 z-0 transition-all duration-500 shadow-glow-teal"
                         style={{
                           width: currentStageIndex === 0 ? '0%' : currentStageIndex === 1 ? '50%' : 'calc(100% - 5rem)'
@@ -539,11 +527,10 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
 
                           return (
                             <div key={stage} className="flex flex-col items-center flex-1 px-1 text-center">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                                isCompleted 
-                                  ? 'bg-teal-500 text-slate-950 shadow-glow-teal' 
-                                  : 'bg-slate-950 border border-slate-700 text-slate-500'
-                              } ${isCurrent ? 'ring-4 ring-teal-500/20 border-teal-400' : ''}`}>
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${isCompleted
+                                ? 'bg-teal-500 text-slate-950 shadow-glow-teal'
+                                : 'bg-slate-950 border border-slate-700 text-slate-500'
+                                } ${isCurrent ? 'ring-4 ring-teal-500/20 border-teal-400' : ''}`}>
                                 {isCompleted ? (
                                   <CheckCircle2 className="w-4.5 h-4.5" />
                                 ) : (
@@ -551,15 +538,14 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
                                 )}
                               </div>
 
-                              <span className={`text-xs mt-1.5 font-semibold ${
-                                isCurrent ? 'text-teal-300 font-bold' : isCompleted ? 'text-slate-200' : 'text-slate-500'
-                              }`}>
+                              <span className={`text-xs mt-1.5 font-semibold ${isCurrent ? 'text-teal-300 font-bold' : isCompleted ? 'text-slate-200' : 'text-slate-500'
+                                }`}>
                                 {stage}
                               </span>
 
                               {/* Timestamp for each status change */}
                               {stageInfo.timestamp ? (
-                                <span 
+                                <span
                                   data-testid={`tracker-time-${item.id}-${stage.toLowerCase().replace(/\s+/g, '-')}`}
                                   className="text-[10px] text-slate-400 font-medium flex items-center justify-center space-x-1 mt-0.5"
                                 >
@@ -572,7 +558,7 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
 
                               {/* Admin note associated with this status */}
                               {stageInfo.note && (
-                                <div 
+                                <div
                                   data-testid={`tracker-note-${item.id}-${stage.toLowerCase().replace(/\s+/g, '-')}`}
                                   className="mt-2 p-2 rounded-xl bg-slate-950/90 border border-amber-500/30 text-[10px] text-amber-200 leading-tight w-full max-w-[100px] sm:max-w-[200px] break-words shadow-sm text-left"
                                 >

@@ -1,27 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  ShieldCheck, 
   Lock, 
-  Unlock, 
   CheckCircle2, 
-  AlertCircle, 
-  Clock, 
   Building2, 
   Sparkles, 
   Save, 
   Check, 
-  SlidersHorizontal,
-  Flame,
-  Activity,
-  FileSpreadsheet,
-  Loader2,
-  Copy,
-  X,
-  ExternalLink,
-  Trash2,
-  RotateCcw,
-  Layers,
-  ArrowRight
+  Flame, 
+  FileSpreadsheet, 
+  Loader2, 
+  Copy, 
+  X, 
+  ExternalLink, 
+  Trash2, 
+  RotateCcw
 } from 'lucide-react';
 import { generateDailyDispatchSummary } from '../services/geminiService';
 

@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  MapPin, 
-  Upload, 
-  X, 
-  CheckCircle2, 
-  AlertCircle, 
-  Loader2, 
-  ArrowRight, 
-  Building2, 
-  AlertTriangle, 
+import {
+  Sparkles,
+  MapPin,
+  Upload,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  ArrowRight,
+  Building2,
+  AlertTriangle,
   FileText,
   Copy,
   Check,
@@ -55,7 +55,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   const [locationNote, setLocationNote] = useState('');
   const [category, setCategory] = useState('Auto-detect with AI');
   const [imagePreview, setImagePreview] = useState(null);
-  
+
   const [isLocating, setIsLocating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
@@ -340,12 +340,12 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 sm:py-10 space-y-8 animate-fade-in">
-      
+
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-3xl bg-slate-900/80 border border-white/[0.08] p-6 sm:p-10 shadow-2xl backdrop-blur-xl">
         <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -left-16 -bottom-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-        
+
         <div className="relative max-w-3xl">
           <div className="inline-flex items-center space-x-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-bold text-teal-300 mb-4">
             <Sparkles className="w-3.5 h-3.5 text-teal-300" />
@@ -420,15 +420,13 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                   key={tile.id}
                   type="button"
                   onClick={() => setCategory(tile.id)}
-                  className={`p-3.5 rounded-2xl text-left transition-all duration-200 border flex flex-col justify-between group ${
-                    isSelected
-                      ? 'bg-teal-500/15 border-teal-500/50 shadow-glow-teal text-slate-100 ring-1 ring-teal-400/40'
-                      : 'bg-slate-950/60 border-white/[0.06] text-slate-300 hover:border-white/[0.15] hover:bg-slate-950/80'
-                  }`}
+                  className={`p-3.5 rounded-2xl text-left transition-all duration-200 border flex flex-col justify-between group ${isSelected
+                    ? 'bg-teal-500/15 border-teal-500/50 shadow-glow-teal text-slate-100 ring-1 ring-teal-400/40'
+                    : 'bg-slate-950/60 border-white/[0.06] text-slate-300 hover:border-white/[0.15] hover:bg-slate-950/80'
+                    }`}
                 >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 transition-transform group-hover:scale-105 ${
-                    isSelected ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-800 text-teal-400'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 transition-transform group-hover:scale-105 ${isSelected ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-800 text-teal-400'
+                    }`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
@@ -469,8 +467,8 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
 
       {/* SUCCESS / HERO AI TRIAGE RESULT CARD */}
       {submissionResult && (
-        <div 
-          data-testid="triage-result-card" 
+        <div
+          data-testid="triage-result-card"
           className="overflow-hidden rounded-3xl border-2 border-teal-500/40 bg-slate-900/95 p-6 sm:p-8 shadow-2xl shadow-teal-500/10 animate-fade-in text-slate-100"
         >
           {/* Top Bar: Success badge + Tracking ID */}
@@ -506,18 +504,17 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                 <Sparkles className="w-4 h-4 text-teal-400 animate-pulse" />
                 <span>Powered by Gemini Multimodal Triage</span>
               </div>
-              <span data-testid="ai-mode-badge" className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
-                submissionResult.aiMode.includes('Mock') 
-                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' 
-                  : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
-              }`}>
+              <span data-testid="ai-mode-badge" className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${submissionResult.aiMode.includes('Mock')
+                ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
+                }`}>
                 {submissionResult.aiMode}
               </span>
             </div>
 
             {/* Main Metrics Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              
+
               {/* Category */}
               <div className="col-span-2 sm:col-span-1 p-3.5 rounded-xl bg-slate-900 border border-white/[0.06]">
                 <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block mb-1">Category</span>
@@ -525,21 +522,19 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
               </div>
 
               {/* Priority Hero Pill */}
-              <div className={`p-3.5 rounded-xl border ${
-                submissionResult.priority === 'Critical' 
-                  ? 'border-red-500/40 bg-red-500/15 shadow-glow-critical' 
-                  : submissionResult.priority === 'High' 
-                  ? 'border-orange-500/40 bg-orange-500/15' 
-                  : submissionResult.priority === 'Medium' 
-                  ? 'border-amber-500/40 bg-amber-500/15' 
-                  : 'border-emerald-500/40 bg-emerald-500/15'
-              }`}>
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block mb-1">Priority</span>
-                <span className={`text-sm font-extrabold ${
-                  submissionResult.priority === 'Critical' ? 'text-red-400' :
-                  submissionResult.priority === 'High' ? 'text-orange-400' :
-                  submissionResult.priority === 'Medium' ? 'text-amber-300' : 'text-emerald-400'
+              <div className={`p-3.5 rounded-xl border ${submissionResult.priority === 'Critical'
+                ? 'border-red-500/40 bg-red-500/15 shadow-glow-critical'
+                : submissionResult.priority === 'High'
+                  ? 'border-orange-500/40 bg-orange-500/15'
+                  : submissionResult.priority === 'Medium'
+                    ? 'border-amber-500/40 bg-amber-500/15'
+                    : 'border-emerald-500/40 bg-emerald-500/15'
                 }`}>
+                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block mb-1">Priority</span>
+                <span className={`text-sm font-extrabold ${submissionResult.priority === 'Critical' ? 'text-red-400' :
+                  submissionResult.priority === 'High' ? 'text-orange-400' :
+                    submissionResult.priority === 'Medium' ? 'text-amber-300' : 'text-emerald-400'
+                  }`}>
                   {submissionResult.priority}
                 </span>
               </div>
@@ -559,17 +554,16 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
                     return (
                       <div
                         key={num}
-                        className={`h-2 flex-1 rounded-sm transition-colors ${
-                          active
-                            ? num >= 9
-                              ? 'bg-red-500 shadow-sm shadow-red-500/50'
-                              : num >= 7
+                        className={`h-2 flex-1 rounded-sm transition-colors ${active
+                          ? num >= 9
+                            ? 'bg-red-500 shadow-sm shadow-red-500/50'
+                            : num >= 7
                               ? 'bg-orange-500'
                               : num >= 4
-                              ? 'bg-amber-400'
-                              : 'bg-emerald-400'
-                            : 'bg-slate-800'
-                        }`}
+                                ? 'bg-amber-400'
+                                : 'bg-emerald-400'
+                          : 'bg-slate-800'
+                          }`}
                       />
                     );
                   })}
@@ -624,7 +618,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
 
       {/* REPORT FORM */}
       <div className="overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900/80 shadow-2xl backdrop-blur-xl">
-        
+
         {/* Glowing top line accent */}
         <div className="h-1 bg-gradient-to-r from-teal-500 via-cyan-400 to-indigo-500"></div>
 
