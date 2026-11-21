@@ -23,31 +23,43 @@ export function mockClassifyIssue(title, description) {
   let recommendedDepartment = "General Administration";
   let aiReasoning = "Triaged via local heuristic rules based on keywords.";
 
-  if (text.includes("pothole") || text.includes("road") || text.includes("bridge") || text.includes("asphalt") || text.includes("pavement") || text.includes("footpath") || text.includes("slab") || text.includes("tar")) {
-    category = "Roads & Infrastructure";
-    recommendedDepartment = "Public Works Department";
-    priority = (text.includes("deep") || text.includes("accident") || text.includes("danger") || text.includes("busy") || text.includes("crater")) ? "High" : "Medium";
-    aiReasoning = "Road structural flaws directly endanger motor traffic and pedestrian commute safety.";
-  } else if (text.includes("garbage") || text.includes("waste") || text.includes("trash") || text.includes("stench") || text.includes("smell") || text.includes("bin") || text.includes("dump") || text.includes("debris") || text.includes("litter")) {
-    category = "Sanitation & Waste";
-    recommendedDepartment = "Municipal Sanitation";
-    priority = (text.includes("overflow") || text.includes("hospital") || text.includes("school") || text.includes("days") || text.includes("maggots")) ? "High" : "Medium";
-    aiReasoning = "Accumulated organic or civic waste poses biological contamination and public hygiene risks.";
-  } else if (text.includes("light") || text.includes("dark") || text.includes("lamp") || text.includes("bulb") || text.includes("pole") || text.includes("illumination") || text.includes("sodium")) {
+  // Regex helpers with word boundary awareness
+  const matches = (pattern) => pattern.test(text);
+
+  // 1. Street Lighting
+  if (matches(/\b(streetlight|streetlights|street light|street lights|lamp post|sodium lamp|dark street|pitch dark|illumination)\b/)) {
     category = "Street Lighting";
     recommendedDepartment = "Electricity Board";
-    priority = (text.includes("pitch") || text.includes("women") || text.includes("junction") || text.includes("accident") || text.includes("blackout")) ? "High" : "Low";
+    priority = matches(/\b(pitch|women|danger|junction|accident|blackout|critical)\b/) ? "High" : "Medium";
     aiReasoning = "Inadequate nighttime illumination compromises urban security and vehicle visibility.";
-  } else if (text.includes("water") || text.includes("drain") || text.includes("pipe") || text.includes("leak") || text.includes("flood") || text.includes("sewage") || text.includes("gutter") || text.includes("burst")) {
-    category = "Water Supply & Drainage";
-    recommendedDepartment = "Water Supply Board";
-    priority = (text.includes("burst") || text.includes("drinking") || text.includes("flood") || text.includes("severe") || text.includes("potable")) ? "Critical" : "High";
-    aiReasoning = "Water distribution failure or drainage blockage can cause urban inundation and waterborne infections.";
-  } else if (text.includes("fire") || text.includes("wire") || text.includes("electric shock") || text.includes("hazard") || text.includes("crime") || text.includes("threat") || text.includes("collapsed") || text.includes("tree") || text.includes("spark")) {
+  }
+  // 2. Public Safety (live wires, electric shock, trees falling, fire)
+  else if (matches(/\b(wire|wires|power line|electric|electrical|shock|electrocution|spark|sparks|fire|flames|fallen tree|tree branch|banyan|collapsed|hazard|threat)\b/)) {
     category = "Public Safety";
     recommendedDepartment = "Police/Public Safety";
     priority = "Critical";
     aiReasoning = "Direct life-safety hazard identified requiring urgent administrative and emergency intervention.";
+  }
+  // 3. Water Supply & Drainage
+  else if (matches(/\b(water|pipe|pipeline|leak|leakage|burst|drain|drainage|sewage|sewer|flood|flooding|gutter|potable)\b/)) {
+    category = "Water Supply & Drainage";
+    recommendedDepartment = "Water Supply Board";
+    priority = matches(/\b(burst|drinking|potable|flood|flooding|severe|gushing)\b/) ? "Critical" : "High";
+    aiReasoning = "Water distribution failure or drainage blockage can cause urban inundation and waterborne infections.";
+  }
+  // 4. Sanitation & Waste
+  else if (matches(/\b(garbage|waste|trash|stench|smell|bin|bins|dump|debris|litter|refuse|maggots)\b/)) {
+    category = "Sanitation & Waste";
+    recommendedDepartment = "Municipal Sanitation";
+    priority = matches(/\b(overflow|overflowing|hospital|school|days|disease|stench)\b/) ? "High" : "Medium";
+    aiReasoning = "Accumulated organic or civic waste poses biological contamination and public hygiene risks.";
+  }
+  // 5. Roads & Infrastructure
+  else if (matches(/\b(pothole|potholes|road|roads|highway|bridge|asphalt|pavement|footpath|sidewalk|slab|crater|tar)\b/)) {
+    category = "Roads & Infrastructure";
+    recommendedDepartment = "Public Works Department";
+    priority = matches(/\b(deep|accident|accidents|danger|dangerous|busy|artery|crater)\b/) ? "High" : "Medium";
+    aiReasoning = "Road structural flaws directly endanger motor traffic and pedestrian commute safety.";
   }
 
   return {
@@ -121,8 +133,11 @@ async function callGeminiRest({ apiKey, model, systemPrompt, userPrompt, imageBa
  * with graceful REST backup and zero-crash mock fallback.
  */
 export async function triageIssueWithGemini({ title, description, location, selectedCategory, imageBase64, apiKey, modelName }) {
-  const key = apiKey || import.meta.env.VITE_GEMINI_API_KEY;
-  const model = modelName || import.meta.env.VITE_GEMINI_MODEL || "gemini-2.5-flash";
+  const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
+  const envModel = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_MODEL) || 'gemini-3.8-flash';
+
+  const key = apiKey || envKey;
+  const model = modelName || envModel || "gemini-3.8-flash";
 
   // If no API key is provided, use fallback mock
   if (!key || key.trim() === "") {

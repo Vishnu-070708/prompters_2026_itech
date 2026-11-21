@@ -16,7 +16,7 @@ export default function App() {
   });
   
   const [modelName, setModelName] = useState(() => {
-    return localStorage.getItem('civic_gemini_model') || import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
+    return localStorage.getItem('civic_gemini_model') || import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash';
   });
 
   // Complaints state persisted in localStorage

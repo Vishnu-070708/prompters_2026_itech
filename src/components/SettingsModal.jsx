@@ -3,12 +3,12 @@ import { X, Key, Cpu, Sparkles, CheckCircle2, AlertTriangle, ShieldCheck, Extern
 
 export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, modelName, setModelName }) {
   const [inputKey, setInputKey] = useState(apiKey || '');
-  const [selectedModel, setSelectedModel] = useState(modelName || 'gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState(modelName || 'gemini-3.8-flash');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
     setInputKey(apiKey || '');
-    setSelectedModel(modelName || 'gemini-2.5-flash');
+    setSelectedModel(modelName || 'gemini-3.8-flash');
   }, [apiKey, modelName, isOpen]);
 
   if (!isOpen) return null;
@@ -90,9 +90,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
               onChange={(e) => setSelectedModel(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm text-slate-800 bg-white shadow-sm"
             >
-              <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended, fastest)</option>
-              <option value="gemini-1.5-flash">gemini-1.5-flash (Fast & lightweight)</option>
-              <option value="gemini-2.0-flash">gemini-2.0-flash (General purpose)</option>
+              <option value="gemini-3.8-flash">gemini-3.8-flash (Recommended, default)</option>
             </select>
           </div>
 
