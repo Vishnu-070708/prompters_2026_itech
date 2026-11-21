@@ -1,5 +1,17 @@
 import { GoogleGenAI } from '@google/genai';
 
+/**
+ * EDITABLE MODEL FALLBACK LIST (Order of Priority):
+ * Edit models here in one place. The engine tries VITE_GEMINI_MODEL
+ * (or session-cached working model) first, then falls back through this list.
+ */
+export const MODEL_FALLBACK_LIST = [
+  "gemini-3.8-flash",
+  "gemini-flash-lite-latest",
+  "gemini-3.1-flash-lite",
+  "gemini-3.5-flash-lite"
+];
+
 const CATEGORIES = [
   "Roads & Infrastructure",
   "Sanitation & Waste",
@@ -32,9 +44,43 @@ const RESPONSE_SCHEMA = {
   required: ["category", "priority", "recommendedDepartment", "aiReasoning"]
 };
 
+// In-memory + sessionStorage cache for whichever model worked for the session
+let inMemoryCachedWorkingModel = null;
+
+export function getCachedWorkingModel() {
+  if (inMemoryCachedWorkingModel) return inMemoryCachedWorkingModel;
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const stored = window.sessionStorage.getItem('civic_cached_working_model');
+      if (stored) {
+        inMemoryCachedWorkingModel = stored;
+        return stored;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+export function setCachedWorkingModel(modelName) {
+  inMemoryCachedWorkingModel = modelName;
+  try {
+    if (typeof window !== 'undefined') {
+      if (window.sessionStorage) {
+        window.sessionStorage.setItem('civic_cached_working_model', modelName);
+      }
+      if (window.localStorage) {
+        window.localStorage.setItem('civic_last_answered_model', modelName);
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
 /**
- * Keyword-based fallback classifier when API key is missing or call fails.
- * Guarantees zero crashes and graceful degradation.
+ * Keyword-based fallback classifier when all models/retries fail or no key is provided.
  */
 export function mockClassifyIssue(title, description, reason = "Local Heuristic") {
   const text = `${title} ${description}`.toLowerCase();
@@ -44,7 +90,6 @@ export function mockClassifyIssue(title, description, reason = "Local Heuristic"
   let recommendedDepartment = "General Administration";
   let aiReasoning = "Triaged via local heuristic rules based on keywords.";
 
-  // Regex helpers with word boundary awareness
   const matches = (pattern) => pattern.test(text);
 
   // 1. Street Lighting
@@ -83,6 +128,15 @@ export function mockClassifyIssue(title, description, reason = "Local Heuristic"
     aiReasoning = "Road structural flaws directly endanger motor traffic and pedestrian commute safety.";
   }
 
+  const modelBadge = `Mock AI mode (${reason})`;
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('civic_last_answered_model', modelBadge);
+    }
+  } catch {
+    // ignore
+  }
+
   return {
     category,
     priority,
@@ -90,7 +144,8 @@ export function mockClassifyIssue(title, description, reason = "Local Heuristic"
     aiReasoning: `${aiReasoning} (${reason})`,
     isMock: true,
     mockReason: reason,
-    aiMode: `Mock AI mode (${reason})`
+    modelUsed: modelBadge,
+    aiMode: modelBadge
   };
 }
 
@@ -106,13 +161,17 @@ function cleanJsonOutput(text) {
 }
 
 /**
- * Direct REST fallback to Gemini with AbortController timeout & minimal thinking
+ * Single attempt to call Gemini via REST API with 15s timeout
  */
-async function callGeminiRest({ apiKey, model, systemPrompt, userPrompt, imageBase64, signal }) {
+async function callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, timeoutMs = 15000 }) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
-  const parts = [];
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort(new Error(`Timeout: ${model} call exceeded ${timeoutMs / 1000}s`));
+  }, timeoutMs);
 
+  const parts = [];
   if (imageBase64 && imageBase64.includes(",")) {
     const [header, base64Data] = imageBase64.split(",");
     const mimeMatch = header.match(/data:([^;]+);base64/);
@@ -129,53 +188,110 @@ async function callGeminiRest({ apiKey, model, systemPrompt, userPrompt, imageBa
     text: `${systemPrompt}\n\n${userPrompt}`
   });
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal,
-    body: JSON.stringify({
-      contents: [{ parts }],
-      generationConfig: {
-        response_mime_type: "application/json",
-        response_schema: RESPONSE_SCHEMA,
-        max_output_tokens: 400,
-        thinking_config: {
-          thinking_budget: 0
-        }
-      }
-    })
-  });
+  // Configure generation options
+  const generationConfig = {
+    response_mime_type: "application/json",
+    response_schema: RESPONSE_SCHEMA,
+    max_output_tokens: 400
+  };
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`HTTP ${response.status}: ${errorBody}`);
+  // Only pass thinking_config to models that support reasoning (e.g. 3.8-flash)
+  if (model.includes("3.8") || model.includes("2.5-flash")) {
+    generationConfig.thinking_config = {
+      thinking_budget: 0
+    };
   }
 
-  const data = await response.json();
-  const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!textOutput) throw new Error("Empty candidate output from Gemini REST");
-  return cleanJsonOutput(textOutput);
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig
+      })
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      const err = new Error(`HTTP ${response.status}: ${errorText}`);
+      err.status = response.status;
+      throw err;
+    }
+
+    const data = await response.json();
+    const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!textOutput) throw new Error("Empty candidate output from Gemini REST");
+    return cleanJsonOutput(textOutput);
+
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
 }
 
 /**
- * Classify issue with Google Gemini API:
- * - 15-second AbortController timeout
- * - Minimal/zero thinking budget (thinkingBudget: 0)
- * - Strict JSON responseSchema & maxOutputTokens: 400
- * - Logs exact errors to browser console
- * - Graceful fallback to Mock AI mode with short reason badge
+ * Attempt call with 1 retry after 2 seconds if status is 503 or timeout
+ */
+async function callWithRetry({ apiKey, model, systemPrompt, userPrompt, imageBase64 }) {
+  try {
+    return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, timeoutMs: 15000 });
+  } catch (firstError) {
+    const is503 = firstError.status === 503 || (firstError.message && firstError.message.includes("503"));
+    const isTimeout = firstError.name === "AbortError" || (firstError.message && firstError.message.includes("Timeout"));
+
+    if (is503 || isTimeout) {
+      console.warn(`CivicResolve: ${model} failed with ${is503 ? '503 (High Demand)' : 'Timeout'}. Retrying in 2 seconds...`);
+      // Wait 2 seconds before retry
+      await new Promise(r => setTimeout(r, 2000));
+      return await callGeminiRestSingle({ apiKey, model, systemPrompt, userPrompt, imageBase64, timeoutMs: 15000 });
+    }
+    // If other error, throw immediately to try next model in fallback list
+    throw firstError;
+  }
+}
+
+/**
+ * Main Triage Function:
+ * 1. Checks session cache for last working model
+ * 2. Tries candidate models in order: cached model -> VITE_GEMINI_MODEL -> MODEL_FALLBACK_LIST
+ * 3. On 503/timeout, retries once after 2 seconds
+ * 4. Caches working model for the session
+ * 5. Falls back to keyword mock if all models fail
  */
 export async function triageIssueWithGemini({ title, description, location, selectedCategory, imageBase64, apiKey, modelName }) {
   const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
   const envModel = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_MODEL) || 'gemini-3.8-flash';
 
   const key = apiKey || envKey;
-  const model = modelName || envModel || "gemini-3.8-flash";
+  const configuredModel = modelName || envModel || "gemini-3.8-flash";
 
   // If no API key is provided, use fallback mock immediately
   if (!key || key.trim() === "") {
     console.warn("CivicResolve: No Gemini API Key set. Running in Mock AI mode.");
     return mockClassifyIssue(title, description, "No API Key");
+  }
+
+  // Build ordered candidate list
+  const sessionCached = getCachedWorkingModel();
+  const candidateModels = [];
+
+  // Prioritize session-cached model if one succeeded previously in this session
+  if (sessionCached && !candidateModels.includes(sessionCached)) {
+    candidateModels.push(sessionCached);
+  }
+  // Then the user configured model
+  if (configuredModel && !candidateModels.includes(configuredModel)) {
+    candidateModels.push(configuredModel);
+  }
+  // Then append all models from the fallback list
+  for (const m of MODEL_FALLBACK_LIST) {
+    if (!candidateModels.includes(m)) {
+      candidateModels.push(m);
+    }
   }
 
   const systemPrompt = `You are CivicResolve AI, an expert municipal triage engine.
@@ -201,109 +317,53 @@ Description: ${description}
 Location: ${location || "Not specified"}
 User Suggested Category: ${selectedCategory || "Auto-detect with AI"}`;
 
-  // Set up 15-second AbortController
-  const controller = new AbortController();
-  const timeoutMs = 15000;
-  let timeoutTriggered = false;
+  let lastError = null;
 
-  const timeoutId = setTimeout(() => {
-    timeoutTriggered = true;
-    controller.abort(new Error("Gemini call timed out after 15 seconds"));
-  }, timeoutMs);
-
-  const timeoutPromise = new Promise((_, reject) => {
-    controller.signal.addEventListener("abort", () => {
-      reject(new Error("Gemini call timed out after 15 seconds"));
-    });
-  });
-
-  try {
-    // Primary attempt: @google/genai SDK
-    const runSdkCall = async () => {
-      const ai = new GoogleGenAI({ apiKey: key.trim() });
-      const contents = [];
-
-      if (imageBase64 && imageBase64.includes(",")) {
-        const [header, base64Data] = imageBase64.split(",");
-        const mimeMatch = header.match(/data:([^;]+);base64/);
-        const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
-        contents.push({
-          inlineData: {
-            mimeType,
-            data: base64Data
-          }
-        });
-      }
-
-      contents.push({
-        text: `${systemPrompt}\n\n${userPrompt}`
-      });
-
-      const response = await ai.models.generateContent({
-        model: model.trim(),
-        contents: contents,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: RESPONSE_SCHEMA,
-          maxOutputTokens: 400,
-          thinkingConfig: {
-            thinkingBudget: 0
-          }
-        }
-      });
-
-      const responseText = response.text;
-      return cleanJsonOutput(responseText);
-    };
-
-    let parsed;
+  // Iterate through fallback models
+  for (const modelToTry of candidateModels) {
     try {
-      parsed = await Promise.race([runSdkCall(), timeoutPromise]);
-    } catch (sdkError) {
-      if (timeoutTriggered || controller.signal.aborted) {
-        throw sdkError;
-      }
-      console.warn("CivicResolve: @google/genai SDK error, falling back to direct REST API:", sdkError);
-      // Secondary attempt: Direct REST with abort signal
-      parsed = await Promise.race([
-        callGeminiRest({
-          apiKey: key.trim(),
-          model: model.trim(),
-          systemPrompt,
-          userPrompt,
-          imageBase64,
-          signal: controller.signal
-        }),
-        timeoutPromise
-      ]);
+      console.log(`CivicResolve: Attempting triage with model: ${modelToTry}`);
+      const parsed = await callWithRetry({
+        apiKey: key.trim(),
+        model: modelToTry,
+        systemPrompt,
+        userPrompt,
+        imageBase64
+      });
+
+      // Cache this working model for the session
+      setCachedWorkingModel(modelToTry);
+      console.log(`CivicResolve: Successfully triaged using: ${modelToTry}`);
+
+      const category = CATEGORIES.includes(parsed.category) ? parsed.category : "Roads & Infrastructure";
+      const priority = PRIORITIES.includes(parsed.priority) ? parsed.priority : "Medium";
+      const recommendedDepartment = parsed.recommendedDepartment || "Public Works Department";
+      const aiReasoning = parsed.aiReasoning || "Automated triage performed by Gemini model.";
+
+      return {
+        category,
+        priority,
+        recommendedDepartment,
+        aiReasoning,
+        isMock: false,
+        modelUsed: modelToTry,
+        aiMode: modelToTry
+      };
+
+    } catch (err) {
+      lastError = err;
+      console.warn(`CivicResolve: Model ${modelToTry} failed:`, err.message);
+      // Continue to next model in fallback list
     }
-
-    clearTimeout(timeoutId);
-
-    const category = CATEGORIES.includes(parsed.category) ? parsed.category : "Roads & Infrastructure";
-    const priority = PRIORITIES.includes(parsed.priority) ? parsed.priority : "Medium";
-    const recommendedDepartment = parsed.recommendedDepartment || "Public Works Department";
-    const aiReasoning = parsed.aiReasoning || "Automated triage performed by Gemini model.";
-
-    return {
-      category,
-      priority,
-      recommendedDepartment,
-      aiReasoning,
-      isMock: false,
-      aiMode: "Gemini 3.8 Flash"
-    };
-
-  } catch (error) {
-    clearTimeout(timeoutId);
-    // Log the exact error to the browser console as requested
-    console.error("CivicResolve Gemini API exact error:", error);
-
-    const isTimeout = timeoutTriggered || error.name === "AbortError" || (error.message && error.message.includes("timed out"));
-    const shortReason = isTimeout ? "15s Timeout" : (error.message && error.message.includes("404") ? "Model Unavailable" : "API Error");
-
-    const fallback = mockClassifyIssue(title, description, shortReason);
-    fallback.aiReasoning = `${fallback.aiReasoning} (Fallback reason: ${error.message || shortReason})`;
-    return fallback;
   }
+
+  // All models failed -> Log exact error to browser console
+  console.error("CivicResolve: All Gemini models in fallback list failed. Exact last error:", lastError);
+
+  const isTimeout = lastError?.name === "AbortError" || (lastError?.message && lastError.message.includes("Timeout"));
+  const shortReason = isTimeout ? "Timeout" : (lastError?.status === 503 ? "All Models Busy (503)" : "API Error");
+
+  const fallback = mockClassifyIssue(title, description, shortReason);
+  fallback.aiReasoning = `${fallback.aiReasoning} (All fallback models exhausted: ${lastError?.message || shortReason})`;
+  return fallback;
 }

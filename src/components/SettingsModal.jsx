@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, Cpu, Sparkles, CheckCircle2, AlertTriangle, ShieldCheck, ExternalLink } from 'lucide-react';
+import { X, Key, Cpu, Sparkles, CheckCircle2, AlertTriangle, ShieldCheck, ExternalLink, Activity } from 'lucide-react';
+import { MODEL_FALLBACK_LIST } from '../services/geminiService';
 
-export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, modelName, setModelName }) {
+export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, modelName, setModelName, lastAnsweredModel }) {
   const [inputKey, setInputKey] = useState(apiKey || '');
   const [selectedModel, setSelectedModel] = useState(modelName || 'gemini-3.8-flash');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [activeAnsweringModel, setActiveAnsweringModel] = useState(lastAnsweredModel || '');
 
   useEffect(() => {
     setInputKey(apiKey || '');
     setSelectedModel(modelName || 'gemini-3.8-flash');
-  }, [apiKey, modelName, isOpen]);
+    const cached = localStorage.getItem('civic_last_answered_model') || lastAnsweredModel || 'None yet';
+    setActiveAnsweringModel(cached);
+  }, [apiKey, modelName, isOpen, lastAnsweredModel]);
 
   if (!isOpen) return null;
 
@@ -51,7 +55,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSave} className="p-6 space-y-5">
+        <form onSubmit={handleSave} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
               <span className="flex items-center space-x-1.5">
@@ -76,22 +80,40 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
               className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-xs text-slate-800 shadow-sm"
             />
             <p className="text-xs text-slate-500 mt-1.5">
-              Key is saved only in your local browser storage. If omitted, CivicResolve uses the keyword-based <strong>Mock AI mode</strong>.
+              Key is saved in browser storage. If omitted, CivicResolve uses the keyword-based <strong>Mock AI mode</strong>.
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5 flex items-center space-x-1.5">
               <Cpu className="w-4 h-4 text-sky-600" />
-              <span>Gemini Model</span>
+              <span>Preferred Primary Model</span>
             </label>
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm text-slate-800 bg-white shadow-sm"
             >
-              <option value="gemini-3.8-flash">gemini-3.8-flash (Recommended, default)</option>
+              <option value="gemini-3.8-flash">gemini-3.8-flash (Primary default)</option>
+              <option value="gemini-flash-lite-latest">gemini-flash-lite-latest (Ultra-fast Flash-Lite)</option>
+              <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Stable Flash-Lite)</option>
             </select>
+          </div>
+
+          {/* Dynamic Active Model Inspector */}
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-700 flex items-center space-x-1">
+                <Activity className="w-3.5 h-3.5 text-sky-600" />
+                <span>Last Answered Model:</span>
+              </span>
+              <span className="font-mono font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded border border-sky-300">
+                {activeAnsweringModel || 'None yet'}
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-500 leading-tight">
+              <strong>Fallback order:</strong> {MODEL_FALLBACK_LIST.join(' ➔ ')} (cached per session)
+            </div>
           </div>
 
           {/* Status Box */}
@@ -99,7 +121,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
             {inputKey ? (
               <div className="flex items-start space-x-2 text-emerald-700 text-xs">
                 <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>API Key configured. Multimodal analysis (photos + text) enabled with Google GenAI SDK.</span>
+                <span>API Key configured with 15s timeout, 1x retry on 503, and multi-model fallback.</span>
               </div>
             ) : (
               <div className="flex items-start space-x-2 text-amber-700 text-xs">

@@ -19,6 +19,10 @@ export default function App() {
     return localStorage.getItem('civic_gemini_model') || import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash';
   });
 
+  const [lastAnsweredModel, setLastAnsweredModel] = useState(() => {
+    return localStorage.getItem('civic_last_answered_model') || 'None yet';
+  });
+
   // Complaints state persisted in localStorage
   const [complaints, setComplaints] = useState(() => {
     try {
@@ -47,6 +51,9 @@ export default function App() {
   // Handler to add a new complaint
   const handleAddComplaint = (newComplaint) => {
     setComplaints((prev) => [newComplaint, ...prev]);
+    if (newComplaint.aiMode) {
+      setLastAnsweredModel(newComplaint.aiMode);
+    }
   };
 
   // Handler for admin updating a complaint
@@ -102,6 +109,7 @@ export default function App() {
         setApiKey={setApiKey}
         modelName={modelName}
         setModelName={setModelName}
+        lastAnsweredModel={lastAnsweredModel}
       />
 
       {/* Footer */}
