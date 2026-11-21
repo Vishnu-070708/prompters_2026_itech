@@ -338,7 +338,9 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
   };
 
   const handleCopyId = (id) => {
-    navigator.clipboard.writeText(id);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(id).catch(() => {});
+    }
     setCopiedId(true);
     setTimeout(() => setCopiedId(false), 2000);
   };
@@ -630,7 +632,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         <form onSubmit={handleSubmit} className="space-y-6 p-6 sm:p-8">
 
           {validationError && (
-            <div className="p-4 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs sm:text-sm flex items-start space-x-2.5 animate-fade-in">
+            <div role="alert" aria-live="assertive" className="p-4 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs sm:text-sm flex items-start space-x-2.5 animate-fade-in">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-400" />
               <span className="font-medium">{validationError}</span>
             </div>

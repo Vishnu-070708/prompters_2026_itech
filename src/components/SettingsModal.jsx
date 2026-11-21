@@ -11,8 +11,12 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
   useEffect(() => {
     setInputKey(apiKey || '');
     setSelectedModel(modelName || 'gemini-flash-lite-latest');
-    const cached = localStorage.getItem('civic_last_answered_model') || lastAnsweredModel || 'None yet';
-    setActiveAnsweringModel(cached);
+    try {
+      const cached = localStorage.getItem('civic_last_answered_model') || lastAnsweredModel || 'None yet';
+      setActiveAnsweringModel(cached);
+    } catch {
+      setActiveAnsweringModel(lastAnsweredModel || 'None yet');
+    }
   }, [apiKey, modelName, isOpen, lastAnsweredModel]);
 
   if (!isOpen) return null;
@@ -21,8 +25,12 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
     e.preventDefault();
     setApiKey(inputKey.trim());
     setModelName(selectedModel.trim());
-    localStorage.setItem('civic_gemini_api_key', inputKey.trim());
-    localStorage.setItem('civic_gemini_model', selectedModel.trim());
+    try {
+      localStorage.setItem('civic_gemini_api_key', inputKey.trim());
+      localStorage.setItem('civic_gemini_model', selectedModel.trim());
+    } catch (err) {
+      console.warn("Failed to persist settings in localStorage:", err);
+    }
     setSavedSuccess(true);
     setTimeout(() => {
       setSavedSuccess(false);
@@ -33,7 +41,11 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
   const handleClear = () => {
     setInputKey('');
     setApiKey('');
-    localStorage.removeItem('civic_gemini_api_key');
+    try {
+      localStorage.removeItem('civic_gemini_api_key');
+    } catch (err) {
+      console.warn("Failed to clear API key in localStorage:", err);
+    }
   };
 
   return (

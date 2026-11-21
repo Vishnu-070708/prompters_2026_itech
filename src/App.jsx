@@ -12,15 +12,27 @@ export default function App() {
   
   // API Key & Model from localStorage or env
   const [apiKey, setApiKey] = useState(() => {
-    return localStorage.getItem('civic_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '';
+    try {
+      return localStorage.getItem('civic_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '';
+    } catch {
+      return import.meta.env.VITE_GEMINI_API_KEY || '';
+    }
   });
-  
+
   const [modelName, setModelName] = useState(() => {
-    return localStorage.getItem('civic_gemini_model') || import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
+    try {
+      return localStorage.getItem('civic_gemini_model') || import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
+    } catch {
+      return import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
+    }
   });
 
   const [lastAnsweredModel, setLastAnsweredModel] = useState(() => {
-    return localStorage.getItem('civic_last_answered_model') || 'None yet';
+    try {
+      return localStorage.getItem('civic_last_answered_model') || 'None yet';
+    } catch {
+      return 'None yet';
+    }
   });
 
   // Complaints state persisted in localStorage

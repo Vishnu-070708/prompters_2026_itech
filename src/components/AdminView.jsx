@@ -16,6 +16,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { generateDailyDispatchSummary } from '../services/geminiService';
+import { sanitizeInput } from '../utils/sanitize';
 
 const DEPARTMENTS = [
   "Public Works Department",
@@ -70,7 +71,9 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
     (dispatchSummary.departments || []).forEach(d => {
       text += `[${d.department}]\n- Action: ${d.actionPlan}\n- Target IDs: ${(d.complaintIds || []).join(', ')}\n- Field Crew: ${d.recommendedCrew || 'Rapid Response'}\n\n`;
     });
-    navigator.clipboard.writeText(text);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
     setCopiedDispatch(true);
     setTimeout(() => setCopiedDispatch(false), 2000);
   };
@@ -116,7 +119,7 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
   // Handle Note Save
   const handleSaveNotes = (id, fallbackVal = '') => {
     const note = notesDrafts[id] !== undefined ? notesDrafts[id] : fallbackVal;
-    onUpdateComplaint(id, { adminNotes: note });
+    onUpdateComplaint(id, { adminNotes: sanitizeInput(note) });
     setSavedSuccessMap(prev => ({ ...prev, [id]: true }));
     setTimeout(() => {
       setSavedSuccessMap(prev => ({ ...prev, [id]: false }));
