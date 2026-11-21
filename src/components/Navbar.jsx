@@ -3,7 +3,7 @@ import { ShieldCheck, PlusCircle, Search, SlidersHorizontal, Settings, Sparkles 
 
 export default function Navbar({ currentView, setCurrentView, onOpenSettings, hasApiKey, complaintsCount }) {
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+    <header className="sticky top-0 z-30 border-b border-brand-100/80 bg-white/85 shadow-[0_1px_0_rgba(30,27,75,0.04)] backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-1 sm:gap-4">
           
@@ -12,15 +12,15 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
             onClick={() => setCurrentView('track')}
             className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group flex-shrink-0"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-brand-900 via-brand-700 to-accent-600 flex items-center justify-center text-white shadow-lg shadow-brand-900/20 group-hover:scale-105 transition-transform flex-shrink-0">
               <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="hidden sm:block">
               <div className="flex items-center space-x-1.5">
-                <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-sky-700 via-indigo-700 to-sky-900 bg-clip-text text-transparent">
+                  <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-brand-900 via-brand-700 to-accent-700 bg-clip-text text-transparent">
                   CivicResolve
                 </span>
-                <span className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-200">
+                <span className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-accent-50 text-accent-700 border border-accent-100">
                   AI Gov
                 </span>
               </div>
@@ -32,10 +32,10 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
           <nav className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
             <button
               onClick={() => setCurrentView('report')}
-              className={`flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+            className={`flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${
                 currentView === 'report'
-                  ? 'bg-sky-600 text-white shadow-sm shadow-sky-600/30'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-brand-900 text-white shadow-md shadow-brand-900/20'
+                  : 'text-slate-600 hover:text-brand-900 hover:bg-brand-50'
               }`}
             >
               <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -44,17 +44,17 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
 
             <button
               onClick={() => setCurrentView('track')}
-              className={`flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+            className={`flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${
                 currentView === 'track'
-                  ? 'bg-sky-600 text-white shadow-sm shadow-sky-600/30'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-brand-900 text-white shadow-md shadow-brand-900/20'
+                  : 'text-slate-600 hover:text-brand-900 hover:bg-brand-50'
               }`}
             >
               <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Track<span className="hidden md:inline"> Issues</span></span>
               {complaintsCount > 0 && (
                 <span className={`text-[10px] sm:text-xs px-1.5 py-0.2 rounded-full font-bold ml-0.5 ${
-                  currentView === 'track' ? 'bg-sky-700 text-white' : 'bg-slate-200 text-slate-700'
+                  currentView === 'track' ? 'bg-brand-700 text-white' : 'bg-surface-200 text-slate-700'
                 }`}>
                   {complaintsCount}
                 </span>
@@ -63,10 +63,10 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
 
             <button
               onClick={() => setCurrentView('admin')}
-              className={`flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+            className={`flex items-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${
                 currentView === 'admin'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-brand-900 text-white shadow-md shadow-brand-900/20'
+                  : 'text-slate-600 hover:text-brand-900 hover:bg-brand-50'
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -103,7 +103,7 @@ export default function Navbar({ currentView, setCurrentView, onOpenSettings, ha
             <button
               onClick={onOpenSettings}
               title="API Key & Settings"
-              className="p-1.5 sm:p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors border border-slate-200"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-brand-900 hover:bg-brand-50 transition-colors border border-brand-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
