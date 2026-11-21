@@ -13,8 +13,12 @@ import {
   SlidersHorizontal,
   Flame,
   Activity,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Loader2,
+  Copy,
+  X
 } from 'lucide-react';
+import { generateDailyDispatchSummary } from '../services/geminiService';
 
 const DEPARTMENTS = [
   "Public Works Department",
@@ -28,7 +32,7 @@ const DEPARTMENTS = [
 const PRIORITIES = ["Low", "Medium", "High", "Critical"];
 const STATUSES = ["Reported", "In Progress", "Resolved"];
 
-export default function AdminView({ complaints, onUpdateComplaint }) {
+export default function AdminView({ complaints, onUpdateComplaint, apiKey, modelName }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [authError, setAuthError] = useState('');
@@ -38,6 +42,41 @@ export default function AdminView({ complaints, onUpdateComplaint }) {
   const [savedSuccessMap, setSavedSuccessMap] = useState({});
   const [filterDept, setFilterDept] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
+
+  // AI Daily Dispatch Summary state
+  const [isGeneratingDispatch, setIsGeneratingDispatch] = useState(false);
+  const [dispatchSummary, setDispatchSummary] = useState(null);
+  const [dispatchError, setDispatchError] = useState('');
+  const [copiedDispatch, setCopiedDispatch] = useState(false);
+
+  const openHighCriticalCount = useMemo(() => {
+    return complaints.filter(c => c.status !== 'Resolved' && (c.priority === 'High' || c.priority === 'Critical')).length;
+  }, [complaints]);
+
+  const handleGenerateDispatch = async () => {
+    setIsGeneratingDispatch(true);
+    setDispatchError('');
+    try {
+      const summary = await generateDailyDispatchSummary({ complaints, apiKey, modelName });
+      setDispatchSummary(summary);
+    } catch (err) {
+      console.error("Failed to generate dispatch summary:", err);
+      setDispatchError("Failed to generate dispatch summary.");
+    } finally {
+      setIsGeneratingDispatch(false);
+    }
+  };
+
+  const handleCopyDispatch = () => {
+    if (!dispatchSummary) return;
+    let text = `${dispatchSummary.summaryTitle}\n${dispatchSummary.overview}\n\n`;
+    (dispatchSummary.departments || []).forEach(d => {
+      text += `[${d.department}]\n- Action: ${d.actionPlan}\n- Target IDs: ${(d.complaintIds || []).join(', ')}\n- Field Crew: ${d.recommendedCrew || 'Rapid Response'}\n\n`;
+    });
+    navigator.clipboard.writeText(text);
+    setCopiedDispatch(true);
+    setTimeout(() => setCopiedDispatch(false), 2000);
+  };
 
   // Verify PIN (admin123)
   const handleAuth = (e) => {
@@ -177,13 +216,143 @@ export default function AdminView({ complaints, onUpdateComplaint }) {
           </h1>
         </div>
 
-        <button
-          onClick={() => setIsAuthenticated(false)}
-          className="self-start sm:self-auto px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors"
-        >
-          Lock / Logout
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            data-testid="ai-daily-dispatch-btn"
+            onClick={handleGenerateDispatch}
+            disabled={isGeneratingDispatch}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-sky-700 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md flex items-center space-x-2 transition-all disabled:opacity-60 cursor-pointer"
+          >
+            {isGeneratingDispatch ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-sky-200" />
+                <span>Synthesizing Dispatch...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 text-sky-200" />
+                <span>AI Daily Dispatch Summary</span>
+                {openHighCriticalCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-rose-500 text-white ml-0.5">
+                    {openHighCriticalCount} Open
+                  </span>
+                )}
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => setIsAuthenticated(false)}
+            className="self-start sm:self-auto px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors"
+          >
+            Lock / Logout
+          </button>
+        </div>
       </div>
+
+      {/* AI DAILY DISPATCH SUMMARY RESULT */}
+      {dispatchSummary && (
+        <div data-testid="dispatch-summary-card" className="bg-gradient-to-br from-indigo-950 via-slate-900 to-sky-950 text-white rounded-2xl shadow-2xl border border-indigo-500/40 p-6 sm:p-7 animate-fadeIn space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-white shadow-lg">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                    Municipal Emergency Dispatch Directive
+                  </span>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
+                    dispatchSummary.isMock ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                  }`}>
+                    {dispatchSummary.isMock ? 'Mock AI mode' : (dispatchSummary.modelUsed || 'Gemini Flash-Lite')}
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Generated: {dispatchSummary.generatedAt}
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-extrabold text-white mt-1">
+                  {dispatchSummary.summaryTitle}
+                </h3>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={handleCopyDispatch}
+                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold text-white flex items-center space-x-1.5 transition-colors border border-white/20"
+              >
+                {copiedDispatch ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedDispatch ? 'Copied' : 'Copy Plan'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDispatchSummary(null)}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors border border-white/20"
+                title="Dismiss Dispatch Directive"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed bg-white/5 p-3.5 rounded-xl border border-white/10">
+            {dispatchSummary.overview}
+          </p>
+
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-sky-400">
+              Department Action Plans & Priority Deployments
+            </h4>
+
+            {dispatchSummary.departments && dispatchSummary.departments.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {dispatchSummary.departments.map((dept, idx) => (
+                  <div key={idx} className="bg-white/5 hover:bg-white/10 rounded-xl p-4 border border-white/10 space-y-2.5 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Building2 className="w-4 h-4 text-sky-400" />
+                        <span className="font-bold text-sm text-white">{dept.department}</span>
+                      </div>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                        {dept.complaintIds?.length || 0} issues
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-200 leading-relaxed">
+                      {dept.actionPlan}
+                    </p>
+
+                    {dept.recommendedCrew && (
+                      <div className="text-[11px] text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-400/20">
+                        <strong className="text-amber-200">Field Crew:</strong> {dept.recommendedCrew}
+                      </div>
+                    )}
+
+                    {dept.complaintIds && dept.complaintIds.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span className="text-[10px] text-slate-400">Target IDs:</span>
+                        {dept.complaintIds.map(id => (
+                          <span key={id} className="text-[10px] font-mono font-bold bg-white/10 text-sky-300 px-1.5 py-0.5 rounded">
+                            {id}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-slate-400 p-4 bg-white/5 rounded-xl">
+                No departmental action required — no open High or Critical complaints.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* KPI STATS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

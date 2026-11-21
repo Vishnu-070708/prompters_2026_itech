@@ -105,6 +105,8 @@ export default function App() {
           <AdminView
             complaints={complaints}
             onUpdateComplaint={handleUpdateComplaint}
+            apiKey={apiKey}
+            modelName={modelName}
           />
         )}
       </main>

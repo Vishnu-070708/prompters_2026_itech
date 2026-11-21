@@ -71,6 +71,46 @@ const SNAP_TO_FILL_SCHEMA = {
   required: ["title", "description", "category"]
 };
 
+const DISPATCH_SUMMARY_SCHEMA = {
+  type: "object",
+  properties: {
+    summaryTitle: {
+      type: "string",
+      description: "Directive headline for today's municipal daily dispatch"
+    },
+    overview: {
+      type: "string",
+      description: "Brief 1-2 sentence executive summary of open high/critical incidents"
+    },
+    departments: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          department: {
+            type: "string",
+            description: "Municipal department name"
+          },
+          actionPlan: {
+            type: "string",
+            description: "Clear, concrete dispatch action plan steps for this department"
+          },
+          complaintIds: {
+            type: "array",
+            items: { type: "string" }
+          },
+          recommendedCrew: {
+            type: "string",
+            description: "Recommended crew and equipment dispatched"
+          }
+        },
+        required: ["department", "actionPlan", "complaintIds"]
+      }
+    }
+  },
+  required: ["summaryTitle", "overview", "departments"]
+};
+
 // In-memory + sessionStorage cache for whichever model worked for the session
 let inMemoryCachedWorkingModel = null;
 
@@ -511,4 +551,150 @@ category: Exactly one of: "Roads & Infrastructure", "Sanitation & Waste", "Stree
 
   console.error("CivicResolve Snap-to-Fill: All models failed, falling back to mock vision:", lastError);
   return mockAnalyzePhoto(lastError?.message || "Fallback");
+}
+
+/**
+ * Mock fallback for AI Daily Dispatch Summary
+ */
+export function mockDailyDispatchSummary(openComplaints, reason = "Local Heuristic") {
+  const grouped = {};
+  openComplaints.forEach(c => {
+    const dept = c.recommendedDepartment || "General Administration";
+    if (!grouped[dept]) grouped[dept] = [];
+    grouped[dept].push(c);
+  });
+
+  const departments = Object.entries(grouped).map(([department, items]) => {
+    const ids = items.map(c => c.id);
+    let plan = `Inspect and execute priority remediation for ${items.length} open high-priority issue(s).`;
+    let crew = "Rapid Response Municipal Unit";
+
+    if (department.includes("Water")) {
+      plan = `Isolate section gate valves, excavate compromised roadway sub-base, and install high-pressure pipe repair sleeve.`;
+      crew = "Pipeline Emergency Repair Team (JCB + Dewatering Pump + Shoring)";
+    } else if (department.includes("Roads") || department.includes("Public Works")) {
+      plan = `Cordon off severe craters with reflective safety barriers. Dispatch rapid hot-mix asphalt patching team for surface leveling.`;
+      crew = "PWD Road Maintenance Crew (Hot-Mix Asphalt Paver + Roller)";
+    } else if (department.includes("Sanitation")) {
+      plan = `Reroute compactor truck to clear overflowing community waste bins immediately. Apply lime powder and pest disinfectant.`;
+      crew = "Solid Waste Collection Team + Sanitation Sprayer";
+    } else if (department.includes("Electricity")) {
+      plan = `Deploy high-reach bucket truck to inspect non-functional streetlights and isolate vulnerable overhead cable connections.`;
+      crew = "Linemen Emergency Unit (Boom Lift Truck + Cable Splicer)";
+    } else if (department.includes("Police") || department.includes("Safety")) {
+      plan = `Establish security perimeter around structural or electrical hazards and manage detour traffic around danger zones.`;
+      crew = "Public Safety Quick Response Patrol";
+    }
+
+    return {
+      department,
+      actionPlan: plan,
+      complaintIds: ids,
+      recommendedCrew: crew
+    };
+  });
+
+  return {
+    summaryTitle: `Municipal Emergency Daily Dispatch Plan (${reason})`,
+    overview: `${openComplaints.length} open high and critical priority civic issue(s) prioritized for immediate field action.`,
+    departments,
+    isMock: true,
+    mockReason: reason,
+    generatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  };
+}
+
+/**
+ * AI Daily Dispatch Summary: sends all open High/Critical complaints to Gemini
+ * and returns an action plan grouped by department.
+ */
+export async function generateDailyDispatchSummary({ complaints, apiKey, modelName }) {
+  const envKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
+  const envModel = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_MODEL) || 'gemini-flash-lite-latest';
+
+  const key = apiKey || envKey;
+  const configuredModel = modelName || envModel || "gemini-flash-lite-latest";
+
+  // Filter for open high/critical complaints
+  const openHighCritical = (complaints || []).filter(c => 
+    c.status !== "Resolved" && (c.priority === "High" || c.priority === "Critical")
+  );
+
+  if (openHighCritical.length === 0) {
+    return {
+      summaryTitle: "All Critical Issues Resolved",
+      overview: "There are currently no open High or Critical priority complaints in the docket.",
+      departments: [],
+      isMock: false,
+      generatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+  }
+
+  if (!key || key.trim() === "") {
+    console.warn("CivicResolve: No Gemini API Key for dispatch summary. Using mock fallback.");
+    return mockDailyDispatchSummary(openHighCritical, "No API Key");
+  }
+
+  const sessionCached = getCachedWorkingModel();
+  const candidateModels = [];
+
+  if (sessionCached && !candidateModels.includes(sessionCached)) {
+    candidateModels.push(sessionCached);
+  }
+  if (configuredModel && !candidateModels.includes(configuredModel)) {
+    candidateModels.push(configuredModel);
+  }
+  for (const m of MODEL_FALLBACK_LIST) {
+    if (!candidateModels.includes(m)) {
+      candidateModels.push(m);
+    }
+  }
+
+  const systemPrompt = `You are CivicResolve Chief Municipal Dispatch Officer.
+Review the list of active High and Critical citizen complaints and synthesize a cohesive Daily Dispatch Action Plan grouped by department.
+Return strict JSON matching the schema with:
+summaryTitle: Directive headline (e.g., "Daily Municipal Emergency Action Directive")
+overview: Executive summary of critical situations and immediate operational risks
+departments: Array of objects, each containing:
+  - department: Name of municipal department
+  - actionPlan: 2-3 specific, actionable steps the department's field crews must execute today
+  - complaintIds: Array of complaint IDs (e.g. ["CR-1042", "CR-1045"])
+  - recommendedCrew: Equipment/personnel needed (e.g. "JCB + PWD Asphalt Patching Unit")`;
+
+  const complaintsList = openHighCritical.map(c => 
+    `[${c.id}] ${c.title} | Priority: ${c.priority} | Severity: ${c.severityScore || 'N/A'}/10 | Dept: ${c.recommendedDepartment} | Location: ${c.location} | Details: ${c.description}`
+  ).join("\n");
+
+  const userPrompt = `Here are the active High and Critical civic complaints requiring immediate dispatch:\n\n${complaintsList}\n\nSynthesize the daily dispatch action plan grouped by department.`;
+
+  let lastError = null;
+
+  for (const modelToTry of candidateModels) {
+    try {
+      console.log(`CivicResolve: Generating daily dispatch summary with: ${modelToTry}`);
+      const parsed = await callWithRetry({
+        apiKey: key.trim(),
+        model: modelToTry,
+        systemPrompt,
+        userPrompt,
+        responseSchema: DISPATCH_SUMMARY_SCHEMA
+      });
+
+      setCachedWorkingModel(modelToTry);
+      return {
+        summaryTitle: parsed.summaryTitle || "Municipal Daily Dispatch Action Plan",
+        overview: parsed.overview || "High and Critical complaints prioritized for departmental mobilization.",
+        departments: Array.isArray(parsed.departments) ? parsed.departments : [],
+        isMock: false,
+        modelUsed: modelToTry,
+        generatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+    } catch (err) {
+      lastError = err;
+      console.warn(`CivicResolve Dispatch Summary: Model ${modelToTry} failed:`, err.message);
+    }
+  }
+
+  console.error("CivicResolve Dispatch Summary: All models failed, using mock fallback:", lastError);
+  return mockDailyDispatchSummary(openHighCritical, lastError?.message || "Fallback");
 }
