@@ -369,6 +369,39 @@ async function runVerification() {
     record('10. Invalid-Image Rejection Logic', false, e.message);
   }
 
+  // Test 11: Error Boundary UI Resilience
+  try {
+    const errorBoundaryExists = fs.existsSync(path.join(ROOT, 'src/components/ErrorBoundary.jsx'));
+    const ebCode = errorBoundaryExists ? fs.readFileSync(path.join(ROOT, 'src/components/ErrorBoundary.jsx'), 'utf-8') : '';
+    const mainCode = fs.readFileSync(path.join(ROOT, 'src/main.jsx'), 'utf-8');
+
+    const handlesError = ebCode.includes('getDerivedStateFromError') && ebCode.includes('componentDidCatch');
+    const wrapsApp = mainCode.includes('<ErrorBoundary>') && mainCode.includes('</ErrorBoundary>') && mainCode.includes('<App />');
+
+    record('11. Error Boundary UI Resilience', errorBoundaryExists && handlesError && wrapsApp,
+      `ErrorBoundary: ${errorBoundaryExists}, handlesError: ${handlesError}, wrapsApp: ${wrapsApp}`);
+  } catch (e) {
+    record('11. Error Boundary UI Resilience', false, e.message);
+  }
+
+  // Test 12: CSP Security Headers & Input Sanitization
+  try {
+    const vercelConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf-8'));
+    const headers = vercelConfig?.headers?.[0]?.headers || [];
+    const hasCsp = headers.some(h => h.key === 'Content-Security-Policy' && h.value.includes("default-src 'self'"));
+    const hasHsts = headers.some(h => h.key === 'Strict-Transport-Security');
+    const hasXss = headers.some(h => h.key === 'X-XSS-Protection' && h.value === '1; mode=block');
+
+    const { sanitizeInput } = await import('../src/utils/sanitize.js');
+    const testSanitize = sanitizeInput('<script>alert("xss")</script>Dangerous pothole');
+    const stripsHtml = testSanitize === 'Dangerous pothole';
+
+    record('12. CSP Security Headers & Input Sanitization', hasCsp && hasHsts && hasXss && stripsHtml,
+      `CSP: ${hasCsp}, HSTS: ${hasHsts}, X-XSS: ${hasXss}, stripsHtml: ${stripsHtml} (cleaned: "${testSanitize}")`);
+  } catch (e) {
+    record('12. CSP Security Headers & Input Sanitization', false, e.message);
+  }
+
   console.log('\n========================================');
   const allPassed = testResults.every(r => r.pass);
   console.log(`OVERALL RESULT: ${allPassed ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}`);

@@ -28,6 +28,7 @@ import {
 import { triageIssueWithGemini, analyzePhotoWithGemini } from '../services/geminiService';
 import { generateTrackingId } from '../utils/trackingId';
 import { compressImageForStorage } from '../utils/imageCompression';
+import { sanitizeInput } from '../utils/sanitize';
 
 const CATEGORIES = [
   "Auto-detect with AI",
@@ -278,11 +279,15 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
 
       const trackingId = generateTrackingId(existingComplaintIds);
 
+      const cleanTitle = sanitizeInput(title);
+      const cleanDescription = sanitizeInput(description);
+      const cleanLocation = sanitizeInput(location) || "Unspecified Location";
+
       const newComplaint = {
         id: trackingId,
-        title: title.trim(),
-        description: description.trim(),
-        location: location.trim() || "Unspecified Location",
+        title: cleanTitle,
+        description: cleanDescription,
+        location: cleanLocation,
         coordinates: coords ? { lat: coords.lat, lng: coords.lng } : null,
         lat: coords?.lat ?? null,
         lng: coords?.lng ?? null,

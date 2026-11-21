@@ -32,6 +32,18 @@ function lintFile(filePath) {
     console.warn(`[WARN] ${relPath}: target="_blank" should include rel="noopener noreferrer"`);
     warningsCount++;
   }
+
+  // Check 4: No hardcoded API keys
+  if (content.match(/AIzaSy[A-Za-z0-9_-]{33}/)) {
+    console.error(`[ERROR] ${relPath}: Hardcoded Google API key pattern detected!`);
+    errorsCount++;
+  }
+
+  // Check 5: No eval() or Function() constructor execution
+  if (/\beval\s*\(/.test(content)) {
+    console.error(`[ERROR] ${relPath}: eval() is forbidden for security`);
+    errorsCount++;
+  }
 }
 
 function walkDir(dir) {

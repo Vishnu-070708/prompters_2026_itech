@@ -39,7 +39,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div className="bg-slate-900 rounded-2xl max-w-md w-full shadow-2xl border border-white/[0.1] overflow-hidden text-slate-100">
-        
+
         {/* Header */}
         <div className="px-6 py-4.5 bg-gradient-to-r from-teal-900/80 via-slate-900 to-indigo-950/80 border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -51,7 +51,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
               <p className="text-[11px] text-slate-400">Google Gemini & Multi-Model Triage</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-100 p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
           >
@@ -67,9 +67,9 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
                 <Key className="w-3.5 h-3.5 text-teal-400" />
                 <span>Google Gemini API Key</span>
               </span>
-              <a 
-                href="https://aistudio.google.com/app/apikey" 
-                target="_blank" 
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-teal-400 hover:text-teal-300 flex items-center space-x-1 hover:underline lowercase tracking-normal font-normal"
               >
