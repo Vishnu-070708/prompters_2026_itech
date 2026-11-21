@@ -304,7 +304,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
         <div className="relative max-w-3xl">
           <div className="inline-flex items-center space-x-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-bold text-teal-300 mb-4">
             <Sparkles className="w-3.5 h-3.5 text-teal-300" />
-            <span className="uppercase tracking-wider text-[10px]">Municipal Autonomous Dispatch</span>
+            <span className="uppercase tracking-wider text-[10px]">Municipal Triage & Dispatch Prototype</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-100">
@@ -312,7 +312,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
           </h1>
 
           <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-400 max-w-2xl">
-            Report local hazards, road defects, or public utilities. Google Gemini autonomously classifies severity, estimates resolution time, and routes crews instantly.
+            Report local hazards, road defects, or public utilities. Google Gemini classifies severity, estimates resolution time, and suggests the right municipal crew.
           </p>
         </div>
 
@@ -403,7 +403,7 @@ export default function ReportView({ onComplaintAdded, onViewTrack, apiKey, mode
             {[
               { num: '01', title: 'Citizen Report', desc: 'Describe or snap photo of the hazard', icon: FileText },
               { num: '02', title: 'Gemini AI Triage', desc: 'Auto-categorizes, rates severity 1-10 & ETA', icon: Sparkles },
-              { num: '03', title: 'Track to Resolution', desc: 'Real-time dispatch updates with admin notes', icon: CheckCircle2 }
+              { num: '03', title: 'Track to Resolution', desc: 'Follow dispatch updates with verified admin notes', icon: CheckCircle2 }
             ].map((step) => {
               const StepIcon = step.icon;
               return (

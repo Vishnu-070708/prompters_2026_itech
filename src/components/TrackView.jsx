@@ -187,13 +187,13 @@ export default function TrackView({ complaints, onSelectReport, onUpvoteComplain
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 border border-teal-500/30 px-3 py-1 text-xs font-bold text-teal-300">
             <Activity className="h-3.5 w-3.5 text-teal-400" />
-            <span className="uppercase tracking-wider text-[10px]">Real-time municipal registry</span>
+            <span className="uppercase tracking-wider text-[10px]">In-browser municipal registry</span>
           </div>
           <h1 className="mt-3 text-3xl font-extrabold text-slate-100 tracking-tight sm:text-4xl">
             Service Requests
           </h1>
           <p className="text-slate-400 text-sm mt-2 max-w-2xl leading-relaxed">
-            Public municipal grievance registry. Monitor real-time status changes, dispatch actions, and community upvotes.
+            Public municipal grievance registry. Monitor status changes, dispatch actions, and community upvotes.
           </p>
         </div>
         <button

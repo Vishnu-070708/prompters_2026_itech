@@ -406,11 +406,13 @@ export default function AdminView({ complaints, onUpdateComplaint, onDeleteCompl
 
         <div className="bg-slate-900/90 p-5 rounded-2xl border border-white/[0.08] shadow-subtle-dark hover:-translate-y-0.5 transition-transform backdrop-blur-sm">
           <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
-            <span>AI Triage Latency</span>
-            <Sparkles className="w-4 h-4 text-cyan-400" />
+            <span>Active Departments</span>
+            <Building2 className="w-4 h-4 text-cyan-400" />
           </div>
-          <span className="text-3xl font-extrabold text-cyan-400 mt-2 block">Real-time</span>
-          <span className="text-xs text-slate-400 mt-1 block">Gemini Flash-Lite</span>
+          <span className="text-3xl font-extrabold text-cyan-400 mt-2 block">
+            {Object.values(stats.deptCounts).filter(c => c > 0).length}
+          </span>
+          <span className="text-xs text-slate-400 mt-1 block">Of 6 municipal units deployed</span>
         </div>
 
       </div>

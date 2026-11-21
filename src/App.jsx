@@ -219,7 +219,7 @@ export default function App() {
             </div>
             <div>
               <p className="font-semibold text-slate-200">CivicResolve Municipal Platform</p>
-              <p className="text-[11px] text-slate-500">Autonomous Grievance Redressal & Intelligent Dispatch</p>
+              <p className="text-[11px] text-slate-500">AI Grievance Redressal & Municipal Dispatch Prototype</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[11px] text-slate-400">
@@ -229,7 +229,7 @@ export default function App() {
             <span className="text-slate-700">•</span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-900 border border-white/[0.08] text-slate-400">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
-              Demo Helpline: 1800-000-DEMO (Simulated)
+              Demo Helpline (Simulated Prototype — No Live Phone Line)
             </span>
           </div>
         </div>
